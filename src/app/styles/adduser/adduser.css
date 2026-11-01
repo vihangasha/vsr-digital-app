@@ -1,0 +1,756 @@
+/* =========================================================
+   USER REGISTRATION
+   Same dark card as Fund Approval, so the white fields stand
+   out. Sections reveal as they scroll in. Auto-filled
+   (read only) fields are dark; inputs are white.
+   ========================================================= */
+
+.adduser-panel {
+    --au-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 1192px;
+    margin: 0 auto;
+    padding: 0 56px 96px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Card + hero-style background ---------- */
+
+.adduser-card {
+    position: relative;
+    border-radius: 10px;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2px #c7c7c7;
+    animation: adduser-card-in 0.6s var(--au-ease) both;
+}
+
+@keyframes adduser-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.adduser-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* grain, same as the hero */
+.adduser-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+.adduser-bg__glow {
+    position: absolute;
+    top: 120px;
+    left: 90px;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 68%);
+}
+
+.adduser-stripe {
+    position: absolute;
+    width: 14px;
+    height: 90px;
+    border-radius: 10px;
+    background: #ffffff;
+    opacity: 0.14;
+    transform: rotate(38deg);
+}
+
+.adduser-stripe--1 {
+    top: -24px;
+    left: 62%;
+    height: 150px;
+    opacity: 0.25;
+}
+
+.adduser-stripe--2 {
+    top: 40px;
+    left: 55%;
+    width: 6px;
+    height: 500px;
+    opacity: 0.12;
+}
+
+.adduser-stripe--3 {
+    top: 60px;
+    left: 97%;
+    width: 18px;
+    height: 110px;
+    opacity: 0.2;
+}
+
+.adduser-stripe--4 {
+    top: 55%;
+    left: -1%;
+    width: 5px;
+    height: 190px;
+    opacity: 0.08;
+}
+
+/* the shimmer keyframes own this stripe's opacity */
+.adduser-stripe--5 {
+    bottom: 25px;
+    left: 2%;
+    height: 200px;
+    animation: adduser-shimmer 5s ease-in-out infinite;
+}
+
+.adduser-stripe--6 {
+    bottom: -30px;
+    left: 78%;
+    width: 10px;
+    height: 150px;
+    opacity: 0.1;
+}
+
+@keyframes adduser-shimmer {
+
+    0%,
+    100% {
+        opacity: 0.06;
+    }
+
+    50% {
+        opacity: 0.2;
+    }
+}
+
+/* ---------- Header ---------- */
+
+.adduser-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 36px 40px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.adduser-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.adduser-header p {
+    margin: 6px 0 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.adduser-close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.adduser-close:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
+.adduser-close:active {
+    transform: scale(0.94);
+}
+
+.adduser-close:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* ---------- Sections ---------- */
+
+.adduser-form {
+    position: relative;
+    z-index: 1;
+}
+
+.adduser-section {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 40px;
+    padding: 32px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.adduser-section__intro h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.adduser-section__intro p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.adduser-section__fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 20px;
+    align-content: start;
+}
+
+/* ---------- Reveal ----------
+   Hidden states only apply once the script has marked the panel
+   as ready, so the form is never invisible if JS is slow or off. */
+
+.adduser-panel.is-ready [data-au-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+        opacity 0.7s var(--au-ease),
+        transform 0.7s var(--au-ease);
+}
+
+.adduser-panel.is-ready [data-au-reveal].is-in {
+    opacity: 1;
+    transform: none;
+}
+
+.adduser-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* fields stagger in once their section is visible */
+.adduser-panel.is-ready .adduser-field {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+        opacity 0.55s var(--au-ease),
+        transform 0.55s var(--au-ease);
+    transition-delay: calc(140ms + var(--i, 0) * 70ms);
+}
+
+.adduser-panel.is-ready .adduser-section.is-in .adduser-field {
+    opacity: 1;
+    transform: none;
+}
+
+.adduser-field--wide {
+    grid-column: 1 / -1;
+}
+
+/* ---------- Labels + inputs ---------- */
+
+.adduser-label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    transition: color 0.2s ease;
+}
+
+.adduser-field:focus-within .adduser-label {
+    color: #ffffff;
+}
+
+.adduser-star {
+    margin-left: 2px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* small "auto" tag on read-only fields */
+.adduser-auto {
+    margin-left: 6px;
+    padding: 2px 7px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+    vertical-align: 1px;
+}
+
+.adduser-field input[type="text"],
+.adduser-field input[type="email"],
+.adduser-field input[type="password"] {
+    width: 100%;
+    box-sizing: border-box;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 16px;
+    outline: none;
+    transition: box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.adduser-field input::placeholder {
+    color: #6b6b6b;
+}
+
+.adduser-field input[type="text"]:focus,
+.adduser-field input[type="email"]:focus,
+.adduser-field input[type="password"]:focus {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+/* invalid: a heavy black bar on the left edge, readable on white without adding a colour */
+.adduser-field--error input {
+    box-shadow: inset 5px 0 0 #000000;
+}
+
+.adduser-field--error input:focus {
+    box-shadow: inset 5px 0 0 #000000, 0 0 0 4px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* auto-filled fields: dark, not editable */
+.adduser-field input[readonly] {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    cursor: default;
+}
+
+.adduser-field input[readonly]:focus {
+    box-shadow: none !important;
+}
+
+.adduser-field input[readonly]::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.adduser-field>small {
+    margin-top: 8px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.adduser-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.adduser-status--ok {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.adduser-status--err {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* ---------- Input with a prefix / suffix chip ---------- */
+
+.adduser-group {
+    display: flex;
+    width: 100%;
+    height: 46px;
+}
+
+.adduser-affix {
+    min-width: 64px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: #000000;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.adduser-affix--end {
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+}
+
+/* icon-only button chip (show / hide password) */
+.adduser-affix--btn {
+    min-width: 52px;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.adduser-affix--btn:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
+.adduser-affix--btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.adduser-group input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+}
+
+.adduser-group>input:not(:first-child) {
+    border-radius: 0 6px 6px 0;
+}
+
+.adduser-group>input:not(:last-child) {
+    border-radius: 6px 0 0 6px;
+}
+
+/* ---------- Role picker ---------- */
+
+.adduser-roles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.adduser-role {
+    position: relative;
+    display: block;
+    cursor: pointer;
+}
+
+/* the real radio stays in the page for keyboard + screen readers */
+.adduser-role input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.adduser-role__body {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 68px;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.adduser-role__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.adduser-role__text strong {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.adduser-role__text small {
+    font-size: 13px;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.6);
+    transition: color 0.2s ease;
+}
+
+.adduser-role:hover .adduser-role__body {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.adduser-role:active .adduser-role__body {
+    transform: scale(0.98);
+}
+
+.adduser-role input:checked+.adduser-role__body {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #000000;
+}
+
+.adduser-role input:checked+.adduser-role__body small {
+    color: rgba(0, 0, 0, 0.62);
+}
+
+.adduser-role input:focus-visible+.adduser-role__body {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* ---------- Submit error ---------- */
+
+.adduser-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 18px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.07);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.adduser-alert svg {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+/* ---------- Footer ---------- */
+
+.adduser-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 28px 40px 36px;
+}
+
+.adduser-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(320px, 100%);
+}
+
+.adduser-progress__text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-variant-numeric: tabular-nums;
+}
+
+.adduser-progress__bar {
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    overflow: hidden;
+}
+
+.adduser-progress__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #ffffff;
+    transition: width 0.4s var(--au-ease);
+}
+
+.adduser-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.adduser-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    padding: 0 26px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.adduser-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.adduser-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.adduser-btn--primary {
+    min-width: 180px;
+    background: #ffffff;
+    color: #000000;
+}
+
+.adduser-btn--primary:hover:not(:disabled) {
+    opacity: 0.88;
+}
+
+.adduser-btn--primary:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.adduser-btn--ghost {
+    background: transparent;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.adduser-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* quiet action: Clear sits apart from Cancel so the two are not confused */
+.adduser-btn--text {
+    padding: 0 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.adduser-btn--text:hover {
+    color: #ffffff;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+    .adduser-panel {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+@media (max-width: 900px) {
+    .adduser-section {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding: 28px 28px;
+    }
+
+    .adduser-section__intro p {
+        max-width: 480px;
+    }
+
+    .adduser-header {
+        padding: 30px 28px 24px;
+    }
+
+    .adduser-alert {
+        padding: 16px 28px;
+    }
+
+    .adduser-footer {
+        padding: 24px 28px 30px;
+    }
+}
+
+@media (max-width: 640px) {
+    .adduser-panel {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .adduser-header h2 {
+        font-size: 24px;
+    }
+
+    .adduser-header,
+    .adduser-section,
+    .adduser-alert,
+    .adduser-footer {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .adduser-section__fields {
+        grid-template-columns: 1fr;
+    }
+
+    .adduser-roles {
+        grid-template-columns: 1fr;
+    }
+
+    .adduser-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .adduser-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .adduser-btn--primary {
+        min-width: 0;
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .adduser-card,
+    .adduser-stripe--5 {
+        animation: none;
+    }
+
+    .adduser-stripe--5 {
+        opacity: 0.1;
+    }
+
+    .adduser-panel.is-ready [data-au-reveal],
+    .adduser-panel.is-ready .adduser-field {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .adduser-progress__fill,
+    .adduser-role__body {
+        transition: none;
+    }
+}

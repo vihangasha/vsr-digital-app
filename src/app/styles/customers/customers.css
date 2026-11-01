@@ -1,0 +1,1523 @@
+/* ============================================
+   Debtors page — black & white theme
+   Same structure as the Collect page:
+   hero (unchanged background) + sliding filter tabs + clean content.
+   ============================================ */
+
+:root {
+    --navbar-height: 72px;
+    /* space the hero reserves for the top navbar; set to 0 on mobile, where the navbar sits at the bottom */
+    --debtors-nav-offset: var(--navbar-height);
+    /* total hero height, measured from the top of the screen (navbar sits on top of it) */
+    --debtors-hero-height: 270px;
+    /* height of the strip that stays visible (below the navbar) while the banner is rolled up */
+    --debtors-peek: 64px;
+    /* table view: side gutters and the gap left at the bottom of the screen */
+    --debtors-gutter: 24px;
+    --debtors-bottom-gap: 32px;
+    --debtors-collapsed-height: calc(var(--debtors-nav-offset) + var(--debtors-peek));
+    /* how far the full banner is pushed up out of sight */
+    --debtors-hero-shift: calc(var(--debtors-hero-height) - var(--debtors-collapsed-height));
+}
+
+.debtors-navbar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.debtors-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: #171717;
+    color: #111111;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Hero banner — background is unchanged ---------- */
+
+.debtors-hero {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--debtors-hero-height);
+    box-sizing: border-box;
+    z-index: 50;
+    overflow: hidden;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -15%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+    color: #ffffff;
+    box-shadow: 0 0.5px 0 0 #454545;
+    padding-top: calc(var(--debtors-nav-offset) + 48px);
+    padding-bottom: 40px;
+    padding-left: 56px;
+    padding-right: 56px;
+}
+
+.debtors-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+
+}
+
+.debtors-hero__glow {
+    position: absolute;
+    top: 50%;
+    left: 92px;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 68%);
+    pointer-events: none;
+}
+
+.debtors-hero__stripes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.debtors-hero__stripe {
+    position: absolute;
+    width: 14px;
+    height: 90px;
+    background: #ffffff;
+    opacity: 0.14;
+    border-radius: 10px;
+    transform: rotate(38deg);
+}
+
+.debtors-hero__stripe--1 {
+    top: -10px;
+    left: 10%;
+    height: 150px;
+    opacity: 0.32;
+}
+
+.debtors-hero__stripe--2 {
+    top: 20px;
+    left: 14.5%;
+    height: 110px;
+    opacity: 0.15;
+    width: 6px;
+}
+
+.debtors-hero__stripe--3 {
+    top: 205px;
+    left: -1%;
+    height: 65px;
+    opacity: 0.08;
+    width: 5px;
+}
+
+.debtors-hero__stripe--4 {
+    top: 235px;
+    left: 3%;
+    height: 85px;
+    opacity: 0.10;
+    width: 5px;
+}
+
+.debtors-hero__stripe--5 {
+    top: 240px;
+    left: 13.5%;
+    height: 60px;
+    opacity: 0.6;
+    animation: debtors-shimmer 5s ease-in-out infinite;
+}
+
+.debtors-hero__stripe--6 {
+    top: 180px;
+    left: 60%;
+    height: 120px;
+    opacity: 0.1;
+    width: 5px;
+}
+
+.debtors-hero__stripe--7 {
+    top: 190px;
+    left: 79%;
+    height: 140px;
+    width: 10px;
+    opacity: 0.1;
+}
+
+.debtors-hero__stripe--8 {
+    top: -30px;
+    left: 75%;
+    height: 200px;
+    opacity: 0.09;
+    width: 7px;
+}
+
+.debtors-hero__stripe--9 {
+    top: 40px;
+    left: 80%;
+    height: 95px;
+    opacity: 0.25;
+    width: 14px;
+}
+
+.debtors-hero__stripe--10 {
+    top: 150px;
+    width: 16px;
+    left: 88%;
+    height: 160px;
+    opacity: 0.3;
+}
+
+.debtors-hero__stripe--11 {
+    top: 58px;
+    width: 18px;
+    left: 99%;
+    height: 100px;
+    opacity: 0.3;
+}
+
+.debtors-hero__stripe--12 {
+    top: 10px;
+    left: 90%;
+    height: 100px;
+    opacity: 0.1;
+    width: 5px;
+}
+
+@keyframes debtors-shimmer {
+
+    0%,
+    100% {
+        opacity: var(--base-opacity, 0.6);
+    }
+
+    50% {
+        opacity: calc(var(--base-opacity, 0.6) + 0.25);
+    }
+}
+
+/* ---------- Hero content ---------- */
+
+.debtors-hero__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+    /* same 110px row as Home, so the hero keeps the same overall height */
+    min-height: 110px;
+}
+
+.debtors-hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.debtors-hero__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.debtors-hero__title {
+    font-size: 30px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.2px;
+}
+
+.debtors-hero__meta {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.62);
+    font-variant-numeric: tabular-nums;
+}
+
+.debtors-hero__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.debtors-hero__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.debtors-hero__btn:active {
+    transform: scale(0.97);
+}
+
+.debtors-hero__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.debtors-hero__btn--primary {
+    background: #ffffff;
+    color: #000000;
+}
+
+.debtors-hero__btn--primary:hover {
+    opacity: 0.88;
+}
+
+.debtors-hero__btn--ghost {
+    background: transparent;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.debtors-hero__btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- Filter tabs (sliding pill) ---------- */
+
+.debtors-tabs {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    /* scrolls sideways on narrow screens instead of growing the hero */
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.debtors-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.debtors-tabs__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.debtors-tabs__indicator.is-ready {
+    opacity: 1;
+    transition:
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.debtors-tabs__btn {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    padding: 11px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.debtors-tabs__btn:hover {
+    color: #ffffff;
+}
+
+.debtors-tabs__btn.is-active {
+    color: #000000;
+}
+
+.debtors-tabs__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: -4px;
+}
+
+.debtors-tabs__btn.is-active:focus-visible {
+    outline-color: #000000;
+}
+
+/* ---------- Rolling banner ----------
+   The banner keeps its full size and background. Rolled up, it is pushed
+   above the screen so only its bottom strip (settings + page + tab) shows. */
+
+.debtors-hero {
+    will-change: transform;
+}
+
+.debtors-hero.is-collapsed {
+    transform: translateY(calc(-1 * var(--debtors-hero-shift)));
+    transition:
+        transform 0.85s cubic-bezier(0.7, 0, 0.2, 1),
+        box-shadow 0.5s ease;
+}
+
+.debtors-hero.is-open {
+    transform: translateY(0);
+    box-shadow: 0 0.5px 0 0 #454545, 0 30px 70px -10px rgba(0, 0, 0, 0.6);
+    transition:
+        transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.6s ease;
+}
+
+/* Hidden content leaves the tab order and screen readers once it is out of sight */
+.debtors-hero.is-collapsed .debtors-hero__content {
+    opacity: 0;
+    visibility: hidden;
+    /* fade out fast, so it is gone before the rolled-up strip text fades in */
+    transition: opacity 0.22s ease, visibility 0s linear 0.85s;
+}
+
+.debtors-hero.is-open .debtors-hero__content {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease;
+}
+
+/* Content drops in after the banner starts sliding down */
+.debtors-hero.is-open .debtors-hero__top {
+    animation: debtors-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.debtors-hero.is-open .debtors-tabs {
+    animation: debtors-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
+}
+
+@keyframes debtors-hero-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Rolled-up strip */
+
+.debtors-hero__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: var(--debtors-peek);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 56px;
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.4s ease 0.5s, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.debtors-hero.is-open .debtors-hero__bar {
+    opacity: 0;
+    transform: translateY(14px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.debtors-hero__settings {
+    flex: 0 0 auto;
+    /* always pinned to the right edge of the strip */
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.debtors-hero__settings svg {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.debtors-hero__settings:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.debtors-hero__settings:hover svg {
+    transform: rotate(45deg);
+}
+
+.debtors-hero__settings:active {
+    transform: scale(0.94);
+}
+
+.debtors-hero__settings:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.debtors-hero__bar-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.debtors-hero__bar-tab {
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: debtors-chip-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes debtors-chip-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Round roll-up button inside the open banner */
+.debtors-hero__btn--icon {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+}
+
+.debtors-hero__btn--icon svg {
+    transition: transform 0.3s ease;
+}
+
+.debtors-hero__btn--icon:hover svg {
+    transform: translateY(-2px);
+}
+
+/* Dim the page behind the open banner; clicking it rolls the banner up */
+.debtors-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+
+.debtors-scrim.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease;
+}
+
+@media (max-width: 1080px) {
+    .debtors-hero__bar {
+        padding: 0 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    .debtors-hero__bar {
+        padding: 0 20px;
+        gap: 12px;
+    }
+
+    .debtors-hero__bar-title {
+        font-size: 17px;
+    }
+}
+
+/* ---------- Body ---------- */
+
+.debtors-body {
+    /* only the rolled-up strip is reserved; the open banner slides over the page */
+    padding-top: calc(var(--debtors-collapsed-height) + 48px);
+}
+
+.debtors-content {
+    max-width: 1192px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    padding: 0 56px 96px;
+}
+
+/* Table view: the page scrolls normally. The table card grows with its rows
+   and stops at five rows (see .debtors-table-wrap), so on short screens the
+   page itself scrolls a little to bring all five rows into view. */
+.debtors-body--table {
+    /* the table view is exactly one screen tall: the card spans the full width,
+       stops above a bottom margin, and the rows scroll inside it */
+    box-sizing: border-box;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+    padding-top: calc(var(--debtors-collapsed-height) + 24px);
+}
+
+.debtors-body--table .debtors-content {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 var(--debtors-gutter) var(--debtors-bottom-gap);
+}
+
+.debtors-body--table .debtors-card {
+    width: 100%;
+}
+
+/* no five-row cap: the table uses whatever height is left above the bottom margin */
+.debtors-body--table .debtors-table-wrap {
+    max-height: none;
+}
+
+/* ---------- Scroll reveal ---------- */
+
+[data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* ---------- Card (same surface as the register form) ---------- */
+
+/* Hugs its content, and stops at the bottom of the screen when there are
+   many rows (flex-shrink + min-height: 0 lets the table panel take the squeeze). */
+.debtors-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: 28px 28px 28px;
+    border-radius: 10px;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2px #c7c7c7;
+}
+
+/* Clipping layer: decoration bleeds off the edges, the card itself isn't clipped */
+.debtors-card__bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.debtors-card__bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+.debtors-card__glow {
+    position: absolute;
+    top: 56px;
+    left: 80px;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 68%);
+}
+
+.debtors-card__stripe {
+    position: absolute;
+    width: 14px;
+    height: 90px;
+    border-radius: 10px;
+    background: #ffffff;
+    opacity: 0.14;
+    transform: rotate(38deg);
+}
+
+/* weighted toward the header, where the card is not covered by the table */
+.debtors-card__stripe--1 {
+    top: -24px;
+    left: 62%;
+    height: 150px;
+    opacity: 0.25;
+}
+
+.debtors-card__stripe--2 {
+    top: 10px;
+    left: 45%;
+    width: 6px;
+    height: 360px;
+    opacity: 0.12;
+}
+
+.debtors-card__stripe--3 {
+    top: 20px;
+    left: 97%;
+    width: 18px;
+    height: 110px;
+    opacity: 0.2;
+}
+
+.debtors-card__stripe--4 {
+    top: 18px;
+    left: 38%;
+    width: 5px;
+    height: 120px;
+    opacity: 0.08;
+}
+
+.debtors-card__stripe--5 {
+    bottom: -60px;
+    left: 3%;
+    height: 160px;
+    opacity: 0.08;
+    animation: debtors-card-shimmer 5s ease-in-out infinite;
+}
+
+.debtors-card__stripe--6 {
+    bottom: -50px;
+    left: 78%;
+    width: 10px;
+    height: 150px;
+    opacity: 0.1;
+}
+
+@keyframes debtors-card-shimmer {
+
+    0%,
+    100% {
+        opacity: 0.05;
+    }
+
+    50% {
+        opacity: 0.15;
+    }
+}
+
+/* ---------- Toolbar (inside the card) ---------- */
+
+.debtors-toolbar {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.debtors-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.debtors-count {
+    min-width: 28px;
+    padding: 3px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    font-variant-numeric: tabular-nums;
+}
+
+.debtors-search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 300px;
+}
+
+.debtors-search__icon {
+    position: absolute;
+    left: 14px;
+    color: #000000;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* white field on the dark card, like the register form */
+.debtors-input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 16px 0 40px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 15px;
+    transition: box-shadow 0.2s ease;
+}
+
+.debtors-input::placeholder {
+    color: #8a8a8a;
+}
+
+.debtors-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+/* ---------- Table ---------- */
+
+/* Same look as the home tables: the table sits straight on the dark card,
+   muted header labels over a hairline, 1px dividers between rows, no zebra,
+   no white panel. Only the rows scroll; the header stays put. */
+.debtors-table-wrap {
+    --th-h: 40px;
+    --row-h: 63px;
+    /* 34px action buttons + 14px padding top/bottom + 1px divider */
+    --visible-rows: 5;
+    /* change this to show more or fewer rows */
+
+    position: relative;
+    z-index: 1;
+    flex: 0 1 auto;
+    min-height: 0;
+    /* header (2 rows) + 5 body rows + room for the horizontal scrollbar */
+    max-height: calc(var(--th-h) * 2 + var(--row-h) * var(--visible-rows) + 16px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: 8px;
+    color: #ffffff;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.debtors-table-wrap:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.debtors-table-wrap::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.debtors-table-wrap::-webkit-scrollbar-track,
+.debtors-table-wrap::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.debtors-table-wrap::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    background-clip: padding-box;
+}
+
+.debtors-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+    background-clip: padding-box;
+}
+
+/* "separate" (not "collapse") so the sticky header keeps its bottom line while scrolling */
+.debtors-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+/* Header: muted label + hairline underneath. It is sticky, so it gets a nearly
+   opaque black backing (the rows scroll under it) instead of the home table's
+   transparent header. The second header row sticks right below the first. */
+.debtors-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-sizing: border-box;
+    height: var(--th-h);
+    padding: 0 32px 0 0;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: visible;
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(6, 6, 6, 0.94);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.debtors-table__sub-row th {
+    top: var(--th-h);
+}
+
+/* "Registration Numbers" sits over its five sub columns, joined by a thin line */
+.debtors-table th.debtors-table__group {
+    text-align: center;
+    padding: 0 16px;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.debtors-table th.debtors-table__sub {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* breathing space at both ends of the table. Scoped to the first header row and
+   the body rows, so the sub-header cells (Daily ... Cheque) are not touched. */
+.debtors-table__group-row>th:first-child,
+.debtors-table tbody td:first-child {
+    padding-left: 24px;
+}
+
+.debtors-table__group-row>th:last-child,
+.debtors-table tbody td:last-child {
+    padding-right: 24px;
+}
+
+/* Rows: transparent over the card, one faint divider each */
+.debtors-table td {
+    box-sizing: border-box;
+    padding: 14px 32px 14px 0;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: #ffffff;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+/* keep a very light hover so the eye can follow a row across 14 columns */
+.debtors-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.debtors-table tbody tr {
+    animation: debtors-row-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+@keyframes debtors-row-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.debtors-table__reg {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.debtors-table td.debtors-table__reg,
+.debtors-table th.debtors-table__sub {
+    padding-right: 24px;
+}
+
+.debtors-table td.debtors-table__reg--last,
+.debtors-table th.debtors-table__sub--last {
+    padding-right: 32px;
+}
+
+.debtors-table__name {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.debtors-table__num {
+    text-align: right !important;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.debtors-table th.debtors-table__num {
+    font-weight: 600;
+}
+
+.debtors-table__date {
+    color: rgba(255, 255, 255, 0.65);
+    font-variant-numeric: tabular-nums;
+}
+
+.debtors-table th.debtors-table__actions-head {
+    text-align: right;
+}
+
+/* loading / error / empty message */
+.debtors-table td.debtors-table__empty {
+    text-align: center;
+    white-space: normal;
+    padding: 36px 24px;
+    border-bottom: none;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.debtors-table tbody tr:hover td.debtors-table__empty {
+    background: transparent;
+}
+
+/* ---------- Row actions: view / edit / delete (same round outlined buttons as the home tables) ---------- */
+
+.debtors-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.debtors-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.debtors-action:hover:not(:disabled) {
+    background: #ffffff;
+    color: #000000;
+}
+
+.debtors-action:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.debtors-action:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.debtors-action:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* Status badge: outlined pill, like the home "You" badge */
+
+.debtors-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Loyalty: a dot that fills in as the tier goes up (bronze hollow, platinum solid) */
+
+.debtors-loyalty {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.debtors-loyalty::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    border: 1.5px solid #ffffff;
+    border-radius: 50%;
+    background: var(--tier, transparent);
+}
+
+.debtors-loyalty--platinum {
+    --tier: #ffffff;
+}
+
+.debtors-loyalty--gold {
+    --tier: #b5b5b5;
+}
+
+.debtors-loyalty--silver {
+    --tier: #555555;
+}
+
+.debtors-loyalty--bronze {
+    --tier: transparent;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+    .debtors-hero {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+
+    .debtors-content {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+@media (max-width: 820px) {
+    :root {
+        --debtors-hero-height: 310px;
+    }
+
+    /* keep the hero content clear of the fixed navbar, stack the heading and buttons */
+    .debtors-hero {
+        padding-top: calc(var(--debtors-nav-offset) + 24px);
+        padding-bottom: 28px;
+    }
+
+    .debtors-hero__content {
+        gap: 16px;
+    }
+
+    .debtors-hero__top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .debtors-hero__heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 640px) {
+    :root {
+        --debtors-gutter: 14px;
+        --debtors-bottom-gap: 20px;
+    }
+
+    .debtors-hero,
+    .debtors-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .debtors-card {
+        padding: 20px 16px 16px;
+    }
+
+    .debtors-search {
+        flex: 1 1 100%;
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .debtors-hero__stripe--5,
+    .debtors-hero__stripe--8,
+    .debtors-card__stripe--5 {
+        animation: none;
+    }
+
+    [data-reveal],
+    .debtors-table tbody tr {
+        animation: none;
+        transition: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .debtors-tabs__indicator.is-ready {
+        transition: none;
+    }
+
+    .debtors-hero.is-collapsed,
+    .debtors-hero.is-open,
+    .debtors-hero__bar,
+    .debtors-scrim {
+        transition-duration: 0.01s;
+        transition-delay: 0s;
+    }
+
+    .debtors-hero.is-open .debtors-hero__top,
+    .debtors-hero.is-open .debtors-tabs,
+    .debtors-hero__bar-tab {
+        animation: none;
+    }
+}
+
+/* ============================================
+   Phones & small tablets (<= 820px): no stripes, grain + gradients kept
+   (placed before the 430 / 375 blocks so those can still shrink things further)
+   ============================================ */
+
+@media (max-width: 820px) {
+    :root {
+        --debtors-nav-offset: 0px;
+        --debtors-hero-height: 240px;
+    }
+
+    .debtors-hero__stripes,
+    .debtors-hero__stripe,
+    .debtors-card__stripe {
+        display: none !important;
+    }
+
+    .debtors-hero,
+    .debtors-card {
+        background-image:
+            radial-gradient(ellipse 420px 260px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .debtors-hero__glow,
+    .debtors-card__glow {
+        width: 220px;
+        height: 220px;
+        left: 50px;
+    }
+}
+
+/* ============================================
+   Mobile (<= 430px): no stripes, same grain + gradients, scaled down
+   ============================================ */
+
+@media (max-width: 430px) {
+    :root {
+        --debtors-hero-height: 226px;
+        --debtors-peek: 60px;
+        --debtors-gutter: 12px;
+        --debtors-bottom-gap: 16px;
+    }
+
+    /* 1. remove the diagonal strips (hero + table card) */
+    .debtors-hero__stripes,
+    .debtors-card__stripe {
+        display: none;
+    }
+
+    /* 2. keep the gradients, but sized for a phone-width surface */
+    .debtors-hero,
+    .debtors-card {
+        background-image:
+            radial-gradient(ellipse 380px 240px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    /* 3. glow: smaller, tucked into the top-left corner */
+    .debtors-hero__glow {
+        width: 200px;
+        height: 200px;
+        left: 40px;
+    }
+
+    .debtors-card__glow {
+        width: 200px;
+        height: 200px;
+        top: 40px;
+        left: 40px;
+    }
+
+    /* grain layer (::before) is untouched, so the texture stays */
+
+    /* 4. tighter hero layout */
+    .debtors-hero {
+        padding-top: calc(var(--debtors-nav-offset) + 20px);
+        padding-bottom: 24px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .debtors-hero__content {
+        gap: 14px;
+    }
+
+    .debtors-hero__top {
+        gap: 12px;
+    }
+
+    .debtors-hero__title {
+        font-size: 26px;
+    }
+
+    .debtors-hero__meta {
+        font-size: 13px;
+    }
+
+    .debtors-hero__actions {
+        gap: 8px;
+    }
+
+    .debtors-hero__btn {
+        padding: 10px 16px;
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .debtors-hero__btn--icon {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+    }
+
+    .debtors-tabs__btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    /* rolled-up strip */
+    .debtors-hero__bar {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .debtors-hero__bar-title {
+        font-size: 16px;
+    }
+
+    .debtors-hero__bar-tab {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+
+    .debtors-hero__settings {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* card + table */
+    .debtors-body--table {
+        padding-top: calc(var(--debtors-collapsed-height) + 16px);
+    }
+
+    .debtors-card {
+        padding: 16px 12px 12px;
+    }
+
+    .debtors-toolbar {
+        margin-bottom: 14px;
+        gap: 10px;
+    }
+
+    .debtors-section-title {
+        font-size: 18px;
+    }
+
+    .debtors-input {
+        height: 42px;
+        font-size: 14px;
+    }
+
+    .debtors-table-wrap {
+        --th-h: 40px;
+        --row-h: 63px;
+    }
+}
+
+/* ============================================
+   Small phones (<= 375px)
+   ============================================ */
+
+@media (max-width: 375px) {
+    :root {
+        --debtors-hero-height: 208px;
+        --debtors-peek: 56px;
+        --debtors-gutter: 10px;
+    }
+
+    .debtors-hero {
+        padding-top: calc(var(--debtors-nav-offset) + 16px);
+        padding-bottom: 20px;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+
+    .debtors-hero,
+    .debtors-card {
+        background-image:
+            radial-gradient(ellipse 320px 200px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .debtors-hero__glow,
+    .debtors-card__glow {
+        width: 160px;
+        height: 160px;
+        left: 32px;
+    }
+
+    .debtors-hero__title {
+        font-size: 24px;
+    }
+
+    .debtors-hero__actions {
+        gap: 6px;
+    }
+
+    .debtors-hero__btn {
+        padding: 9px 13px;
+        font-size: 12.5px;
+    }
+
+    .debtors-hero__btn--icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .debtors-tabs__btn {
+        padding: 9px 12px;
+        font-size: 12.5px;
+    }
+
+    .debtors-hero__bar {
+        padding: 0 14px;
+    }
+
+    .debtors-hero__bar-title {
+        font-size: 15px;
+    }
+
+    .debtors-card {
+        padding: 14px 10px 10px;
+    }
+}
+
+
+/* ============================================
+   Scrollable filter tabs (both directions)
+   ============================================ */
+
+.debtors-tabs {
+    /* swipe sideways without the page / banner stealing the gesture */
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-inline: 24px;
+    /* edge fades: only shown on the side that still has more tabs */
+    --fade-l: 0px;
+    --fade-r: 0px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+}
+
+.debtors-tabs[data-scroll-start="true"] {
+    --fade-l: 28px;
+}
+
+.debtors-tabs[data-scroll-end="true"] {
+    --fade-r: 28px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .debtors-tabs {
+        cursor: grab;
+    }
+
+    .debtors-tabs.is-dragging {
+        cursor: grabbing;
+        user-select: none;
+    }
+
+    .debtors-tabs.is-dragging .debtors-tabs__btn {
+        pointer-events: none;
+    }
+}
+
+@media (max-width: 430px) {
+
+    /* the pill spans the full width of the hero so there is room to swipe */
+    .debtors-tabs {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}

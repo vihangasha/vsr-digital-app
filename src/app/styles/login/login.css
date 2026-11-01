@@ -1,0 +1,366 @@
+/* ============================================
+   Login page — same identity as home-loading / home-hero:
+   black gradient background, 38deg white stripes, grain,
+   and a clear diagonal band down the middle where the
+   sign-in card sits.
+
+   Stripes are generated in login/page.js and carry their own
+   custom properties (--left, --w, --op, --dur, --delay) plus a
+   direction class (--up / --down).
+   ============================================ */
+
+.login {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -15%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #ffffff;
+}
+
+/* faint grain, same as hero / loading */
+.login::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+/* ---------- Stripe field ---------- */
+
+.login__stripes {
+    position: absolute;
+    inset: -30% -30%;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(128deg,
+            #000 0%,
+            #000 26%,
+            transparent 44%,
+            transparent 56%,
+            #000 74%,
+            #000 100%);
+    mask-image: linear-gradient(128deg,
+            #000 0%,
+            #000 26%,
+            transparent 44%,
+            transparent 56%,
+            #000 74%,
+            #000 100%);
+}
+
+.login__stripe {
+    position: absolute;
+    left: var(--left);
+    top: 50%;
+    width: var(--w);
+    height: 130px;
+    background: #ffffff;
+    border-radius: 10px;
+    opacity: var(--op);
+    transform: rotate(38deg) translateY(0);
+    will-change: transform;
+    animation-name: var(--dir);
+    animation-duration: var(--dur);
+    animation-delay: var(--delay);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+.login__stripe--up {
+    --dir: login-stripe-flow-up;
+}
+
+.login__stripe--down {
+    --dir: login-stripe-flow-down;
+}
+
+@keyframes login-stripe-flow-up {
+    0% {
+        transform: rotate(38deg) translateY(110vmax);
+    }
+
+    100% {
+        transform: rotate(38deg) translateY(-110vmax);
+    }
+}
+
+@keyframes login-stripe-flow-down {
+    0% {
+        transform: rotate(38deg) translateY(-110vmax);
+    }
+
+    100% {
+        transform: rotate(38deg) translateY(110vmax);
+    }
+}
+
+/* ---------- Card ---------- */
+
+.login__card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 32px 28px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+.login__mark {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.2);
+    animation: login-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes login-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.85;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.25);
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: 1;
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+}
+
+.login__title {
+    margin: 22px 0 6px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.login__subtitle {
+    margin: 0 0 26px;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- Form ---------- */
+
+.login__form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.login__field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.login__label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.login__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.login__input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font: inherit;
+    font-size: 15px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.login__input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.login__input:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.login__input:focus-visible {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14);
+}
+
+.login__input--password {
+    padding-right: 64px;
+}
+
+.login__input[aria-invalid="true"] {
+    border-color: rgba(255, 120, 120, 0.8);
+}
+
+/* stop the browser's autofill from painting a bright background */
+.login__input:-webkit-autofill {
+    -webkit-text-fill-color: #ffffff;
+    -webkit-box-shadow: 0 0 0 1000px #111111 inset;
+    caret-color: #ffffff;
+}
+
+.login__toggle {
+    position: absolute;
+    right: 6px;
+    height: 34px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.login__toggle:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.login__toggle:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 1px;
+}
+
+.login__error {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 120, 120, 0.4);
+    background: rgba(255, 90, 90, 0.08);
+    font-size: 13px;
+    line-height: 1.45;
+    color: #ffb4b4;
+}
+
+.login__submit {
+    position: relative;
+    height: 48px;
+    margin-top: 4px;
+    border: none;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.login__submit:hover:not(:disabled) {
+    background: #5a5a5a;
+    color: #ffffff;
+}
+
+.login__submit:active:not(:disabled) {
+    transform: scale(0.99);
+}
+
+.login__submit:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.login__submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.login__spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    vertical-align: -3px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    border-top-color: #000000;
+    animation: login-spin 0.7s linear infinite;
+}
+
+@keyframes login-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.login__note {
+    margin: 22px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 480px) {
+    .login {
+        padding: 16px;
+    }
+
+    .login__card {
+        padding: 30px 22px 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .login__stripe,
+    .login__mark,
+    .login__spinner {
+        animation: none;
+    }
+
+    .login__input,
+    .login__toggle,
+    .login__submit {
+        transition: none;
+    }
+}

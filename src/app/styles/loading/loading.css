@@ -1,0 +1,184 @@
+/* ============================================
+   Home loading screen — same identity as home-hero:
+   black gradient background, 38deg white stripes.
+
+   The stripe field is generated in loading.js (any count),
+   each stripe carrying its own CSS custom properties
+   (--left, --w, --op, --dur, --delay) plus a direction
+   class (--up or --down). Every stripe loops forever,
+   strictly alternating direction along its own 38deg axis,
+   and fades through a clear diagonal band across the
+   center of the screen.
+   ============================================ */
+
+.home-loading {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    overflow: hidden;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -15%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+}
+
+/* faint grain, same as hero */
+.home-loading::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+/* Stripe field — masked so the middle diagonal band of the
+   screen stays clear. Angle (128deg) runs perpendicular to the
+   38deg stripe tilt, so the clear band reads as a diagonal
+   swath parallel to the stripes themselves. */
+.home-loading__stripes {
+    position: absolute;
+    inset: -30% -30%;
+    -webkit-mask-image: linear-gradient(128deg,
+            #000 0%,
+            #000 26%,
+            transparent 44%,
+            transparent 56%,
+            #000 74%,
+            #000 100%);
+    mask-image: linear-gradient(128deg,
+            #000 0%,
+            #000 26%,
+            transparent 44%,
+            transparent 56%,
+            #000 74%,
+            #000 100%);
+}
+
+/* Every stripe is one element, fully described by the custom
+   properties set inline in loading.js. Nothing about an
+   individual stripe's look, position, speed, or timing lives
+   in a per-index CSS rule — so any number of stripes can be
+   added without ever risking one being left un-animated. */
+.home-loading__stripe {
+    position: absolute;
+    left: var(--left);
+    top: 50%;
+    width: var(--w);
+    height: 130px;
+    background: #ffffff;
+    border-radius: 10px;
+    opacity: var(--op);
+    /* rotate first, then translate — translateY in the keyframes
+       below moves the stripe along its own tilted axis, not the
+       screen's vertical */
+    transform: rotate(38deg) translateY(0);
+    will-change: transform;
+    animation-name: var(--dir);
+    animation-duration: var(--dur);
+    animation-delay: var(--delay);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+/* Direction is the ONLY thing a class controls — every stripe
+   must be one or the other, there is no third, undirected state. */
+.home-loading__stripe--up {
+    --dir: home-stripe-flow-up;
+}
+
+.home-loading__stripe--down {
+    --dir: home-stripe-flow-down;
+}
+
+/* travels up the tilted axis (toward the top-right end of the stripe).
+   Distance is in vmax (not vh) so the stripe fully clears the
+   viewport on wide, tall, or square screens alike — no aspect
+   ratio leaves it stranded mid-frame. */
+@keyframes home-stripe-flow-up {
+    0% {
+        transform: rotate(38deg) translateY(110vmax);
+    }
+
+    100% {
+        transform: rotate(38deg) translateY(-110vmax);
+    }
+}
+
+/* travels down the tilted axis (toward the bottom-left end of the stripe) */
+@keyframes home-stripe-flow-down {
+    0% {
+        transform: rotate(38deg) translateY(-110vmax);
+    }
+
+    100% {
+        transform: rotate(38deg) translateY(110vmax);
+    }
+}
+
+/* ---------- Center mark, sitting in the cleared band ---------- */
+
+.home-loading__center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.home-loading__mark {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.2);
+    animation: home-loading-pulse 1.8s ease-in-out infinite;
+}
+
+.home-loading__text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes home-loading-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.85;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.25);
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: 1;
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-loading__stripe {
+        animation: none;
+    }
+
+    .home-loading__mark {
+        animation: none;
+    }
+}

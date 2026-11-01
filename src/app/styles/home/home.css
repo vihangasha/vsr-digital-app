@@ -1,0 +1,1266 @@
+/* ============================================
+   Home / Front Page - black & white theme
+   Hero is unchanged. Content uses dark cards in the
+   same style as the customer registration form.
+   ============================================ */
+
+:root {
+    /* adjust this to your Navbar component's real rendered height */
+    --navbar-height: 72px;
+    /* kept in case another stylesheet still reads it; the banner now uses the --home-* sizes below */
+    --hero-height: 260px;
+    --home-gap: 25px;
+
+    /* space the hero reserves for the top navbar; set to 0 on mobile, where the navbar sits at the bottom */
+    --home-nav-offset: var(--navbar-height);
+    /* total hero height, measured from the top of the screen (navbar sits on top of it) */
+    --home-hero-height: 270px;
+    /* height of the strip that stays visible (below the navbar) while the banner is rolled up */
+    --home-peek: 64px;
+    --home-collapsed-height: calc(var(--home-nav-offset) + var(--home-peek));
+    /* how far the full banner is pushed up out of sight */
+    --home-hero-shift: calc(var(--home-hero-height) - var(--home-collapsed-height));
+}
+
+.home-navbar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.home-page {
+    background: #171717;
+    color: #111111;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Hero banner (unchanged) ---------- */
+
+.home-hero {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--home-hero-height);
+    box-sizing: border-box;
+    z-index: 50;
+    overflow: hidden;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -15%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+    box-shadow: 0 0.5px 0 0 #454545;
+    color: #ffffff;
+    padding-top: calc(var(--home-nav-offset) + 48px);
+    padding-bottom: 40px;
+    padding-left: 56px;
+    padding-right: 56px;
+}
+
+.home-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+.home-hero__glow {
+    position: absolute;
+    top: 50%;
+    left: 92px;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 68%);
+    pointer-events: none;
+}
+
+.home-hero__stripes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.home-hero__stripe {
+    position: absolute;
+    width: 14px;
+    height: 90px;
+    background: #ffffff;
+    opacity: 0.14;
+    border-radius: 10px;
+    transform: rotate(38deg);
+}
+
+.home-hero__stripe--1 {
+    top: -10px;
+    left: 10%;
+    height: 150px;
+    opacity: 0.32;
+}
+
+.home-hero__stripe--2 {
+    top: 20px;
+    left: 14.5%;
+    height: 110px;
+    opacity: 0.15;
+    width: 6px;
+}
+
+.home-hero__stripe--3 {
+    top: 205px;
+    left: -1%;
+    height: 65px;
+    opacity: 0.08;
+    width: 5px;
+}
+
+.home-hero__stripe--4 {
+    top: 235px;
+    left: 3%;
+    height: 85px;
+    opacity: 0.10;
+    width: 5px;
+}
+
+.home-hero__stripe--5 {
+    top: 240px;
+    left: 13.5%;
+    height: 60px;
+    opacity: 0.6;
+    animation: home-shimmer 5s ease-in-out infinite;
+}
+
+.home-hero__stripe--6 {
+    top: 180px;
+    left: 60%;
+    height: 120px;
+    opacity: 0.1;
+    width: 5px;
+}
+
+.home-hero__stripe--7 {
+    top: 190px;
+    left: 79%;
+    height: 140px;
+    width: 10px;
+    opacity: 0.1;
+}
+
+.home-hero__stripe--8 {
+    top: -30px;
+    left: 75%;
+    height: 200px;
+    opacity: 0.09;
+    width: 7px;
+}
+
+.home-hero__stripe--9 {
+    top: 40px;
+    left: 80%;
+    height: 95px;
+    opacity: 0.25;
+    width: 14px;
+}
+
+.home-hero__stripe--10 {
+    top: 150px;
+    width: 16px;
+    left: 88%;
+    height: 160px;
+    opacity: 0.3;
+}
+
+.home-hero__stripe--11 {
+    top: 58px;
+    width: 18px;
+    left: 99%;
+    height: 100px;
+    opacity: 0.3;
+}
+
+.home-hero__stripe--12 {
+    top: 10px;
+    left: 90%;
+    height: 100px;
+    opacity: 0.1;
+    width: 5px;
+}
+
+@keyframes home-shimmer {
+
+    0%,
+    100% {
+        opacity: var(--base-opacity, 0.6);
+    }
+
+    50% {
+        opacity: calc(var(--base-opacity, 0.6) + 0.25);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .home-hero__stripe--5,
+    .home-hero__stripe--8 {
+        animation: none;
+    }
+}
+
+/* min-height keeps the hero exactly as tall as before (the old avatar was 110px) */
+.home-hero__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+    min-height: 110px;
+}
+
+.home-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.home-identity__name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.home-identity__name {
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.2px;
+}
+
+.home-identity__meta {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 15px;
+}
+
+.home-identity__role {
+    margin: 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- Roll-up button inside the open banner ---------- */
+
+.home-hero__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.home-hero__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.home-hero__btn:active {
+    transform: scale(0.97);
+}
+
+.home-hero__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.home-hero__btn--ghost {
+    background: transparent;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.home-hero__btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+.home-hero__btn--icon {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+}
+
+.home-hero__btn--icon svg {
+    transition: transform 0.3s ease;
+}
+
+.home-hero__btn--icon:hover svg {
+    transform: translateY(-2px);
+}
+
+/* ---------- Rolling banner ----------
+   The banner keeps its full size and background. Rolled up, it is pushed
+   above the screen so only its bottom strip (title + settings) shows. */
+
+.home-hero {
+    will-change: transform;
+}
+
+.home-hero.is-collapsed {
+    transform: translateY(calc(-1 * var(--home-hero-shift)));
+    transition:
+        transform 0.85s cubic-bezier(0.7, 0, 0.2, 1),
+        box-shadow 0.5s ease;
+}
+
+.home-hero.is-open {
+    transform: translateY(0);
+    box-shadow: 0 0.5px 0 0 #454545, 0 30px 70px -10px rgba(0, 0, 0, 0.6);
+    transition:
+        transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.6s ease;
+}
+
+/* Hidden content leaves the tab order and screen readers once it is out of sight */
+.home-hero.is-collapsed .home-hero__content {
+    opacity: 0;
+    visibility: hidden;
+    /* fade out fast, so it is gone before the rolled-up strip text fades in */
+    transition: opacity 0.22s ease, visibility 0s linear 0.85s;
+}
+
+.home-hero.is-open .home-hero__content {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease;
+}
+
+/* Content drops in after the banner starts sliding down */
+.home-hero.is-open .home-identity {
+    animation: home-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.home-hero.is-open .home-hero__actions {
+    animation: home-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
+}
+
+@keyframes home-hero-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Rolled-up strip */
+
+.home-hero__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: var(--home-peek);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 56px;
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.4s ease 0.5s, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.home-hero.is-open .home-hero__bar {
+    opacity: 0;
+    transform: translateY(14px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.home-hero__settings {
+    flex: 0 0 auto;
+    /* always pinned to the right edge of the strip */
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.home-hero__settings svg {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-hero__settings:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.home-hero__settings:hover svg {
+    transform: rotate(45deg);
+}
+
+.home-hero__settings:active {
+    transform: scale(0.94);
+}
+
+.home-hero__settings:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.home-hero__bar-title {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-hero__bar-tab {
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: home-chip-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes home-chip-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Dim the page behind the open banner; clicking it rolls the banner up */
+.home-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+
+.home-scrim.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease;
+}
+
+/* ---------- Layout ---------- */
+
+/* Add user form: sits below the fixed hero. The form brings its own side padding. */
+.home-adduser {
+    /* only the rolled-up strip is reserved; the open banner slides over the page */
+    padding-top: calc(var(--home-collapsed-height) + 48px);
+}
+
+.home-content {
+    padding: calc(var(--home-collapsed-height) + 48px) 56px 64px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: var(--home-gap);
+    align-items: start;
+}
+
+.home-main,
+.home-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--home-gap);
+    min-width: 0;
+}
+
+/* ---------- Dark card (same look as the registration form) ---------- */
+
+.home-card {
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 28px 30px;
+    border-radius: 10px;
+    background-image:
+        radial-gradient(ellipse 900px 480px at 88% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background-color: #000000;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2px #c7c7c7;
+    animation: home-card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* grain */
+.home-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+/* one tilted stripe, like the hero */
+.home-card::after {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: 14%;
+    width: 12px;
+    height: 120px;
+    border-radius: 10px;
+    background: #ffffff;
+    opacity: 0.12;
+    transform: rotate(38deg);
+    pointer-events: none;
+}
+
+.home-card>* {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes home-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.home-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.home-card__head h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.home-card__head p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.home-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Buttons ---------- */
+
+.home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, color 0.2s ease;
+}
+
+.home-btn:active {
+    transform: scale(0.97);
+}
+
+.home-btn:focus-visible,
+.home-icon-btn:focus-visible,
+.home-link-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.home-btn--primary {
+    background: #ffffff;
+    color: #000000;
+}
+
+.home-btn--primary:hover {
+    opacity: 0.88;
+}
+
+.home-btn--ghost {
+    background: transparent;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.home-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Log out: outlined, fills white on hover so it is clearly a leave action */
+.home-btn--danger {
+    background: transparent;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.home-btn--danger:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
+.home-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.home-icon-btn:hover:not(:disabled) {
+    background: #ffffff;
+    color: #000000;
+}
+
+.home-icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.home-icon-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.home-link-btn {
+    align-self: flex-start;
+    margin-top: 18px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.75);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.home-link-btn:hover {
+    color: #ffffff;
+}
+
+/* ---------- Profile ---------- */
+
+.home-profile {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+}
+
+.home-profile__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+.home-profile__fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+    margin: 0;
+}
+
+.home-profile__fields dt {
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.home-profile__fields dd {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Users ---------- */
+
+.home-search {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.home-search input {
+    width: 100%;
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 14px 0 40px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: box-shadow 0.2s ease;
+}
+
+.home-search input::placeholder {
+    color: #8a8a8a;
+}
+
+.home-search input:focus {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+.home-search__icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: #000000;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.home-table-wrap {
+    overflow-x: auto;
+}
+
+.home-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.home-table th {
+    padding: 0 12px 12px 0;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    white-space: nowrap;
+}
+
+.home-table td {
+    padding: 14px 12px 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.home-table__actions-head {
+    text-align: right;
+    padding-right: 0 !important;
+}
+
+.home-table td:last-child {
+    padding-right: 0;
+}
+
+.home-table__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.home-badge {
+    margin-left: 10px;
+    padding: 2px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.home-empty {
+    margin: 18px 0 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Clock ---------- */
+
+.home-clock__time {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 52px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.home-clock__seconds {
+    font-size: 24px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.home-clock__meridiem {
+    margin-left: 2px;
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.home-clock .home-card__head {
+    margin-bottom: 18px;
+}
+
+/* ---------- Calendar ---------- */
+
+.home-calendar {
+    display: flex;
+    flex-direction: column;
+}
+
+.home-calendar .home-card__head {
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.home-calendar__nav {
+    display: flex;
+    gap: 8px;
+}
+
+.home-calendar__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    row-gap: 4px;
+    text-align: center;
+}
+
+.home-calendar__weekday {
+    padding-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.home-calendar__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: 0 auto;
+    border-radius: 50%;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.home-calendar__day.is-outside {
+    color: rgba(255, 255, 255, 0.28);
+}
+
+.home-calendar__day.is-today {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 800;
+}
+
+/* ---------- Move working days (Task Extender) ---------- */
+
+.home-extender__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.home-extender__label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* day count and button share one line */
+.home-extender__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* short field: the most anyone enters is 10,000 */
+.home-input {
+    flex: 0 0 92px;
+    width: 92px;
+    min-width: 0;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    outline: none;
+    transition: box-shadow 0.2s ease;
+}
+
+.home-input::placeholder {
+    color: #9a9a9a;
+    font-weight: 500;
+}
+
+.home-input:focus {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+.home-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ----- Extend button + bolt (flash.png) ----- */
+
+.home-btn--bolt {
+    flex: 1 1 auto;
+    transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 1.8s ease-out;
+}
+
+/* keep the bolt at full strength while the request is running */
+.home-btn--bolt:disabled {
+    opacity: 1;
+    cursor: progress;
+}
+
+/* flash.png: --bolt-line is the outline, --bolt-solid is the same shape filled in.
+   Embedded so it works without copying files into /public. */
+.home-btn__bolt-box {
+    --bolt-line: url("data:image/png;base64,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");
+    --bolt-solid: url("data:image/png;base64,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");
+    position: relative;
+    display: inline-block;
+    flex: none;
+    width: 15px;
+    height: 26px;
+}
+
+.home-bolt {
+    position: absolute;
+    inset: 0;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+}
+
+/* resting bolt: outline only, the inside shows the button's white */
+.home-bolt--outline {
+    background: currentColor;
+    -webkit-mask-image: var(--bolt-line);
+    mask-image: var(--bolt-line);
+}
+
+/* hover: the inside fills black from top to bottom */
+.home-bolt--fill {
+    background: currentColor;
+    -webkit-mask-image: var(--bolt-solid);
+    mask-image: var(--bolt-solid);
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.45s ease-out;
+}
+
+.home-btn--bolt:hover:not(:disabled) .home-bolt--fill,
+.home-btn--bolt:focus-visible .home-bolt--fill {
+    clip-path: inset(0 0 0 0);
+}
+
+/* triggered: blue outline + cyan fill appear at once, then the whole layer
+   fades out slowly so the bolt returns to normal gradually */
+.home-bolt-charge {
+    position: absolute;
+    inset: -2px;
+    opacity: 0;
+    transition: opacity 1.8s ease-out;
+    filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.9));
+}
+
+.home-bolt-charge .home-bolt {
+    inset: 2px;
+}
+
+.home-bolt--charge-fill {
+    background: #22d3ee;
+    -webkit-mask-image: var(--bolt-solid);
+    mask-image: var(--bolt-solid);
+}
+
+.home-bolt--charge-line {
+    background: #1d4ed8;
+    -webkit-mask-image: var(--bolt-line);
+    mask-image: var(--bolt-line);
+}
+
+.home-btn--bolt.is-charged {
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.45), 0 0 18px rgba(34, 211, 238, 0.55);
+    transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0s;
+}
+
+.home-btn--bolt.is-charged .home-bolt-charge {
+    opacity: 1;
+    transition: none;
+}
+
+/* ----- Notice area: always takes up its space (3 lines), so the card never grows ----- */
+
+.home-extender__notice {
+    min-height: calc(1.5em * 3);
+    margin: 16px 0 0;
+    padding-left: 12px;
+    border-left: 2px solid transparent;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.home-extender__notice.is-success,
+.home-extender__notice.is-error {
+    animation: home-notice-in 0.3s ease both;
+}
+
+.home-extender__notice.is-success {
+    border-left-color: #ffffff;
+}
+
+.home-extender__notice.is-error {
+    border-left: 2px dashed rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes home-notice-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+    .home-content {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .home-side {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+}
+
+@media (max-width: 820px) {
+
+    /* the navbar moves to the bottom of the screen, so the hero no longer leaves room for it */
+    :root {
+        --home-nav-offset: 0px;
+        --home-hero-height: 220px;
+    }
+}
+
+@media (max-width: 640px) {
+    .home-hero {
+        padding-top: calc(var(--home-nav-offset) + 32px);
+        padding-bottom: 28px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .home-identity__name {
+        font-size: 24px;
+    }
+
+    .home-hero__bar {
+        padding: 0 20px;
+        gap: 12px;
+    }
+
+    .home-hero__bar-title {
+        font-size: 17px;
+    }
+
+    .home-hero__bar-tab {
+        display: none;
+    }
+
+    .home-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .home-side {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .home-card {
+        padding: 22px 20px;
+    }
+
+    .home-card__head {
+        flex-wrap: wrap;
+    }
+
+    .home-profile {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    .home-profile__fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 430px) {
+    :root {
+        --home-peek: 60px;
+    }
+
+    .home-hero__bar-title {
+        font-size: 16px;
+    }
+
+    .home-hero__settings {
+        width: 36px;
+        height: 36px;
+    }
+
+    .home-hero__btn--icon {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 375px) {
+    :root {
+        --home-peek: 56px;
+    }
+
+    .home-hero__bar-title {
+        font-size: 15px;
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .home-card {
+        animation: none;
+    }
+
+    .home-hero.is-collapsed,
+    .home-hero.is-open,
+    .home-hero__bar,
+    .home-scrim {
+        transition-duration: 0.01s;
+        transition-delay: 0s;
+    }
+
+    .home-hero.is-open .home-identity,
+    .home-hero.is-open .home-hero__actions,
+    .home-hero__bar-tab {
+        animation: none;
+    }
+
+    .home-extender__notice.is-success,
+    .home-extender__notice.is-error {
+        animation: none;
+    }
+
+    .home-bolt--fill,
+    .home-bolt-charge,
+    .home-btn--bolt {
+        transition: none;
+    }
+}

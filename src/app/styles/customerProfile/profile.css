@@ -1,0 +1,433 @@
+/* =========================================================
+   CUSTOMER PROFILE
+   Uses the registration form's card, hero background and
+   stripes (regdebtor-card / regdebtor-bg). Only the profile
+   layout lives here.
+   ========================================================= */
+
+/* the card's decoration sits behind; everything else sits above it */
+.custprofile-card> :not(.regdebtor-bg) {
+    position: relative;
+    z-index: 1;
+}
+
+.custprofile dl,
+.custprofile dd,
+.custprofile ul {
+    margin: 0;
+}
+
+/* ---------- Top bar ---------- */
+
+.custprofile-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 24px 40px 0;
+}
+
+.custprofile-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custprofile-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.custprofile-btn:hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #000000;
+}
+
+.custprofile-btn--danger:hover {
+    background: #c62828;
+    border-color: #c62828;
+    color: #ffffff;
+}
+
+.custprofile-btn:active {
+    transform: scale(0.96);
+}
+
+.custprofile-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* ---------- Identity ---------- */
+
+.custprofile-identity {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 28px 40px 36px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.custprofile-avatar {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    margin: 7px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    outline: 1px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 6px;
+}
+
+.custprofile-identity__text {
+    min-width: 0;
+}
+
+.custprofile-identity h2 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.custprofile-sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin: 10px 0 0;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.custprofile-sub:empty {
+    display: none;
+}
+
+.custprofile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.custprofile-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.custprofile-tag__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffffff;
+}
+
+.custprofile-tag--link:hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #000000;
+}
+
+.custprofile-tag--link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* ---------- At a glance ---------- */
+
+.custprofile-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.custprofile-stat {
+    min-width: 0;
+    padding: 22px 28px;
+}
+
+.custprofile-stat+.custprofile-stat {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custprofile-stat dt {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.custprofile-stat dd {
+    margin-top: 6px;
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.custprofile-stat dd span {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- Details ---------- */
+
+.custprofile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+    padding: 32px 40px 40px;
+}
+
+.custprofile-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+.custprofile-panel {
+    padding: 24px 26px 26px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.custprofile-panel h3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 22px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.custprofile-panel__icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    color: #ffffff;
+}
+
+.custprofile-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 24px;
+}
+
+.custprofile-list--single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.custprofile-item {
+    min-width: 0;
+}
+
+.custprofile-item--wide {
+    grid-column: 1 / -1;
+}
+
+.custprofile-item dt {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.custprofile-item dd {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #ffffff;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.custprofile-item dd.is-empty {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Registration numbers */
+
+.custprofile-regs {
+    padding: 0;
+    list-style: none;
+}
+
+.custprofile-reg {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custprofile-reg:first-child {
+    padding-top: 0;
+}
+
+.custprofile-reg:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.custprofile-reg__type {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.custprofile-reg.is-empty .custprofile-reg__type {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.custprofile-reg__none {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* same chip as the prefix in the registration form */
+.custprofile-code {
+    padding: 5px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    background: #000000;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+    .custprofile-grid {
+        grid-template-columns: minmax(0, 1fr) 300px;
+    }
+}
+
+@media (max-width: 900px) {
+    .custprofile-top {
+        padding: 22px 28px 0;
+    }
+
+    .custprofile-identity {
+        padding: 24px 28px 30px;
+        gap: 24px;
+    }
+
+    .custprofile-avatar {
+        width: 84px;
+        height: 84px;
+        font-size: 30px;
+    }
+
+    .custprofile-identity h2 {
+        font-size: 28px;
+    }
+
+    .custprofile-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0;
+    }
+
+    .custprofile-stat {
+        padding: 18px 28px;
+    }
+
+    .custprofile-stat:nth-child(odd) {
+        border-left: none;
+    }
+
+    .custprofile-stat:nth-child(n + 3) {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .custprofile-grid {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 28px 28px 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    .custprofile-top {
+        padding: 18px 20px 0;
+    }
+
+    .custprofile-identity {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 22px 20px 26px;
+    }
+
+    .custprofile-identity h2 {
+        font-size: 24px;
+    }
+
+    .custprofile-stat {
+        padding: 16px 20px;
+    }
+
+    .custprofile-stat dd {
+        font-size: 18px;
+    }
+
+    .custprofile-grid {
+        padding: 24px 20px 28px;
+    }
+
+    .custprofile-panel {
+        padding: 20px 18px 22px;
+    }
+
+    .custprofile-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .custprofile-btn,
+    .custprofile-tag {
+        transition: none;
+    }
+}

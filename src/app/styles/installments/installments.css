@@ -1,0 +1,1459 @@
+/* ============================================
+   Collect page — black & white theme
+   The hero banner itself comes from home.css (unchanged).
+   This file only adds: hero tabs + page content.
+   ============================================ */
+
+/* ---------- Rolling banner ----------
+   Same mechanism as the Customers page. The banner keeps its full size and
+   background (from home.css). Rolled up, it is pushed above the screen so only
+   its bottom strip (page name + current tab + settings) shows, and the content
+   below gets the space. Open, it slides over the page instead of pushing it. */
+
+.collect-page {
+    /* space the hero reserves for the top navbar; 0 on mobile, where the navbar sits at the bottom */
+    --collect-nav-offset: var(--navbar-height, 72px);
+    /* total hero height, measured from the top of the screen (navbar sits on top of it) */
+    --hero-height: 270px;
+    /* height of the strip that stays visible (below the navbar) while the banner is rolled up */
+    --collect-peek: 64px;
+    --collect-collapsed-height: calc(var(--collect-nav-offset) + var(--collect-peek));
+    /* how far the full banner is pushed up out of sight */
+    --collect-hero-shift: calc(var(--hero-height) - var(--collect-collapsed-height));
+}
+
+.collect-page .collect-hero {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--hero-height);
+    box-sizing: border-box;
+    z-index: 50;
+    overflow: hidden;
+    padding-top: calc(var(--collect-nav-offset) + 48px);
+    padding-bottom: 40px;
+    padding-left: 56px;
+    padding-right: 56px;
+    will-change: transform;
+}
+
+.collect-page .collect-hero.is-collapsed {
+    transform: translateY(calc(-1 * var(--collect-hero-shift)));
+    transition:
+        transform 0.85s cubic-bezier(0.7, 0, 0.2, 1),
+        box-shadow 0.5s ease;
+}
+
+.collect-page .collect-hero.is-open {
+    transform: translateY(0);
+    box-shadow: 0 0.5px 0 0 #454545, 0 30px 70px -10px rgba(0, 0, 0, 0.6);
+    transition:
+        transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.6s ease;
+}
+
+/* Hero content */
+
+.collect-hero__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.collect-hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.collect-hero__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.collect-hero__title {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+}
+
+.collect-hero__meta {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* Round roll-up button inside the open banner */
+.collect-hero__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.collect-hero__btn--icon {
+    width: 44px;
+    height: 44px;
+}
+
+.collect-hero__btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.collect-hero__btn:active {
+    transform: scale(0.94);
+}
+
+.collect-hero__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.collect-hero__btn svg {
+    transition: transform 0.3s ease;
+}
+
+.collect-hero__btn:hover svg {
+    transform: translateY(-2px);
+}
+
+/* Hidden content leaves the tab order and screen readers once it is out of sight */
+.collect-hero.is-collapsed .collect-hero__content {
+    opacity: 0;
+    visibility: hidden;
+    /* fade out fast, so it is gone before the rolled-up strip text fades in */
+    transition: opacity 0.22s ease, visibility 0s linear 0.85s;
+}
+
+.collect-hero.is-open .collect-hero__content {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease;
+}
+
+/* Content drops in after the banner starts sliding down */
+.collect-hero.is-open .collect-hero__top {
+    animation: collect-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.collect-hero.is-open .collect-tabs {
+    animation: collect-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
+}
+
+@keyframes collect-hero-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Rolled-up strip */
+
+.collect-hero__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: var(--collect-peek);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 56px;
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.4s ease 0.5s, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.collect-hero.is-open .collect-hero__bar {
+    opacity: 0;
+    transform: translateY(14px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.collect-hero__settings {
+    flex: 0 0 auto;
+    /* always pinned to the right edge of the strip */
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.collect-hero__settings svg {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.collect-hero__settings:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.collect-hero__settings:hover svg {
+    transform: rotate(45deg);
+}
+
+.collect-hero__settings:active {
+    transform: scale(0.94);
+}
+
+.collect-hero__settings:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.collect-hero__bar-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    color: #ffffff;
+}
+
+.collect-hero__bar-tab {
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: collect-chip-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes collect-chip-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Dim the page behind the open banner; clicking it rolls the banner up */
+.collect-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+
+.collect-scrim.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease;
+}
+
+/* ---------- Hero tabs ---------- */
+
+.collect-tabs {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    width: min(100%, 560px);
+    min-width: 0;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* The tabs always stay on one line; when they do not fit, this track scrolls sideways */
+.collect-tabs__scroll {
+    --collect-fade-l: 0px;
+    --collect-fade-r: 0px;
+    position: relative;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 999px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--collect-fade-l), #000 calc(100% - var(--collect-fade-r)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--collect-fade-l), #000 calc(100% - var(--collect-fade-r)), transparent 100%);
+}
+
+.collect-tabs__scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* fade the edge that still has tabs hidden behind it (set from JS) */
+.collect-tabs__scroll[data-scroll-start="false"] {
+    --collect-fade-l: 22px;
+}
+
+.collect-tabs__scroll[data-scroll-end="false"] {
+    --collect-fade-r: 22px;
+}
+
+.collect-tabs__scroll.is-dragging {
+    cursor: grabbing;
+}
+
+.collect-tabs__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.collect-tabs__indicator.is-ready {
+    opacity: 1;
+    transition:
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.collect-tabs__btn {
+    position: relative;
+    z-index: 1;
+    flex: 1 0 auto;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.collect-tabs__btn:hover {
+    color: #ffffff;
+}
+
+.collect-tabs__btn.is-active {
+    color: #000000;
+}
+
+.collect-tabs__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    /* inside the button: the scrolling track would clip an outer outline */
+    outline-offset: -3px;
+}
+
+.collect-tabs__btn.is-active:focus-visible {
+    outline-color: #000000;
+    outline-offset: -4px;
+}
+
+/* ---------- Page + single dark card (same pattern as the register form) ---------- */
+
+.collect-page {
+    --collect-gap: 24px;
+    --collect-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --collect-surface-bg:
+        radial-gradient(ellipse 900px 480px at 88% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background: #171717;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.collect-content {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1192px;
+    margin: 0 auto;
+    /* only the rolled-up strip is reserved; the open banner slides over the page */
+    padding: calc(var(--collect-collapsed-height) + var(--collect-gap) + 20px) 56px 96px;
+}
+
+.collect-surface {
+    position: relative;
+    border-radius: 10px;
+    background-image: var(--collect-surface-bg);
+    background-color: #000000;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2px #c7c7c7;
+    animation: collect-card-in 0.6s var(--collect-ease) both;
+}
+
+@keyframes collect-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Clipping layer: decoration bleeds off the edges, the card itself isn't clipped */
+.collect-surface__bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.collect-surface__bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+.collect-surface__glow {
+    position: absolute;
+    top: 120px;
+    left: 90px;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 68%);
+}
+
+.collect-surface__stripe {
+    position: absolute;
+    width: 14px;
+    height: 90px;
+    border-radius: 10px;
+    background: #ffffff;
+    opacity: 0.14;
+    transform: rotate(38deg);
+}
+
+.collect-surface__stripe--1 {
+    top: -24px;
+    left: 62%;
+    height: 150px;
+    opacity: 0.25;
+}
+
+.collect-surface__stripe--2 {
+    top: 40px;
+    left: 55%;
+    width: 6px;
+    height: 500px;
+    opacity: 0.12;
+}
+
+.collect-surface__stripe--3 {
+    top: 60px;
+    left: 97%;
+    width: 18px;
+    height: 110px;
+    opacity: 0.2;
+}
+
+.collect-surface__stripe--4 {
+    top: 55%;
+    left: -1%;
+    width: 5px;
+    height: 190px;
+    opacity: 0.08;
+}
+
+.collect-surface__stripe--5 {
+    bottom: 25px;
+    left: 2%;
+    height: 200px;
+    opacity: 0.08;
+    animation: collect-surface-shimmer 5s ease-in-out infinite;
+}
+
+.collect-surface__stripe--6 {
+    bottom: -30px;
+    left: 78%;
+    width: 10px;
+    height: 150px;
+    opacity: 0.1;
+}
+
+@keyframes collect-surface-shimmer {
+
+    0%,
+    100% {
+        opacity: 0.05;
+    }
+
+    50% {
+        opacity: 0.15;
+    }
+}
+
+/* ---------- Header ---------- */
+
+.collect-header {
+    position: relative;
+    z-index: 1;
+    padding: 36px 40px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.collect-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+}
+
+.collect-header p {
+    margin: 6px 0 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* ---------- Sections: intro on the left, content on the right ---------- */
+
+.collect-panel {
+    position: relative;
+    z-index: 1;
+    /* plays when switching tabs (panel is re-mounted by key) */
+    animation: collect-panel-in 0.4s var(--collect-ease) both;
+}
+
+@keyframes collect-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.collect-section {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 40px;
+    padding: 32px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.collect-section--last {
+    border-bottom: none;
+    padding-bottom: 40px;
+}
+
+.collect-section__intro h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.collect-section__intro p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.collect-section__body {
+    min-width: 0;
+}
+
+.collect-count {
+    min-width: 26px;
+    padding: 2px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Lookup form ---------- */
+
+.collect-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.collect-field {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.collect-field label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    transition: color 0.2s ease;
+}
+
+.collect-field:focus-within label {
+    color: #ffffff;
+}
+
+/* white field on the dark card, like the register form */
+.collect-input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 16px;
+    outline: none;
+    transition: box-shadow 0.2s ease;
+}
+
+.collect-input::placeholder {
+    color: #8a8a8a;
+}
+
+.collect-input:focus {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+.collect-input:disabled {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
+/* ---------- Buttons ---------- */
+
+.collect-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 46px;
+    padding: 0 26px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* on the dark card */
+.collect-btn--light {
+    background: #ffffff;
+    color: #000000;
+}
+
+.collect-btn--light:hover:not(:disabled) {
+    opacity: 0.88;
+}
+
+.collect-btn--light:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* on the white sheet */
+.collect-btn--dark {
+    background: #000000;
+    color: #ffffff;
+}
+
+.collect-btn--dark:hover:not(:disabled) {
+    background: #222222;
+}
+
+.collect-btn--dark:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 3px;
+}
+
+.collect-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.collect-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.collect-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: collect-spin 0.7s linear infinite;
+}
+
+@keyframes collect-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- White sheet (the data surface, like the Customers table) ---------- */
+
+.collect-sheet {
+    overflow: hidden;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111111;
+}
+
+.collect-empty {
+    margin: 0;
+    padding: 36px 18px;
+    text-align: center;
+    font-size: 15px;
+    color: #666666;
+}
+
+.collect-msg {
+    margin: 0;
+    padding: 20px 22px;
+    border-left: 3px solid #000000;
+    font-size: 15px;
+    color: #222222;
+    animation: collect-rise 0.35s ease both;
+}
+
+@keyframes collect-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Loading skeleton */
+
+.collect-skeleton {
+    display: grid;
+    gap: 12px;
+    padding: 22px;
+}
+
+.collect-skeleton__row {
+    display: block;
+    height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #efefef 25%, #f8f8f8 50%, #efefef 75%);
+    background-size: 200% 100%;
+    animation: collect-shimmer 1.2s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 80ms);
+}
+
+.collect-skeleton__row:nth-child(1) {
+    width: 45%;
+    height: 24px;
+}
+
+.collect-skeleton__row:nth-child(even) {
+    width: 80%;
+}
+
+@keyframes collect-shimmer {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}
+
+/* Outlined pill: registration number and plan type */
+
+.collect-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 999px;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222222;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Customer account (inside the sheet) ---------- */
+
+.collect-account {
+    animation: collect-rise 0.4s var(--collect-ease) both;
+}
+
+/* Success notice after collecting */
+
+.collect-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: #000000;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    animation: collect-rise 0.35s ease both;
+}
+
+.collect-notice__tick {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    animation: collect-draw 0.45s 0.15s ease forwards;
+}
+
+@keyframes collect-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.collect-account__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    padding: 22px 22px 18px;
+    box-shadow: inset 0 -1px 0 #e5e5e5;
+}
+
+.collect-account__name {
+    font-size: 24px;
+    font-weight: 800;
+    color: #000000;
+}
+
+.collect-account__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+    margin: 0;
+    padding: 20px 22px 24px;
+}
+
+.collect-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    animation: collect-rise 0.45s var(--collect-ease) both;
+    animation-delay: calc(120ms + var(--i) * 70ms);
+}
+
+.collect-row dt {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444444;
+}
+
+.collect-row dd {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111111;
+    overflow-wrap: anywhere;
+}
+
+.collect-row__num {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Installment + the action it leads to */
+
+.collect-account__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 18px 22px;
+    background: #fafafa;
+    box-shadow: inset 0 1px 0 #e5e5e5;
+}
+
+.collect-due {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.collect-due__label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444444;
+}
+
+.collect-due__amount {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #000000;
+    font-variant-numeric: tabular-nums;
+}
+
+.collect-due__hint {
+    font-size: 14px;
+    color: #666666;
+}
+
+/* ---------- Session log ---------- */
+
+.collect-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.collect-log__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    transition: background-color 0.2s ease;
+    animation: collect-rise 0.35s ease both;
+}
+
+.collect-log__item+.collect-log__item {
+    border-top: 1px solid #ececec;
+}
+
+.collect-log__item:hover {
+    background: #f5f5f5;
+}
+
+.collect-log__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #000000;
+}
+
+.collect-log__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #666666;
+    font-variant-numeric: tabular-nums;
+}
+
+.collect-log__meta .collect-badge {
+    padding: 2px 10px;
+    font-size: 12px;
+}
+
+.collect-log__amount {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: #000000;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+    .collect-content {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+@media (max-width: 900px) {
+    .collect-header {
+        padding: 30px 28px 24px;
+    }
+
+    .collect-section {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding: 28px;
+    }
+
+    .collect-section__intro p {
+        max-width: 480px;
+    }
+
+    .collect-section--last {
+        padding-bottom: 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    .collect-page {
+        --collect-gap: 16px;
+    }
+
+    .collect-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .collect-header h2 {
+        font-size: 24px;
+    }
+
+    .collect-header,
+    .collect-section {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .collect-field {
+        flex-basis: 100%;
+    }
+
+    .collect-form .collect-btn,
+    .collect-account__foot .collect-btn {
+        width: 100%;
+    }
+
+    .collect-account__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .collect-surface__stripe--5 {
+        animation: none;
+    }
+
+    .collect-page .collect-hero.is-collapsed,
+    .collect-page .collect-hero.is-open,
+    .collect-hero__bar,
+    .collect-scrim {
+        transition-duration: 0.01s;
+        transition-delay: 0s;
+    }
+
+    .collect-hero.is-open .collect-hero__top,
+    .collect-hero.is-open .collect-tabs,
+    .collect-hero__bar-tab {
+        animation: none;
+    }
+
+    .collect-surface,
+    .collect-panel,
+    .collect-account,
+    .collect-row,
+    .collect-notice,
+    .collect-log__item,
+    .collect-msg {
+        animation: none;
+        transition: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .collect-notice__tick {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+
+    .collect-skeleton__row {
+        animation: none;
+    }
+}
+
+/* ============================================
+   Rolling banner — responsive (same ladder as Customers)
+   ============================================ */
+
+@media (max-width: 1080px) {
+    .collect-page .collect-hero {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+
+    .collect-hero__bar {
+        padding: 0 32px;
+    }
+}
+
+/* Phones & small tablets: navbar is at the bottom, no stripes, grain + gradients kept */
+@media (max-width: 820px) {
+    .collect-page {
+        --collect-nav-offset: 0px;
+        --hero-height: 190px;
+    }
+
+    .collect-page .collect-hero {
+        padding-top: 24px;
+        padding-bottom: 28px;
+        background-image:
+            radial-gradient(ellipse 420px 260px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .collect-page .collect-hero .home-hero__stripes,
+    .collect-page .collect-hero .home-hero__stripe {
+        display: none !important;
+    }
+
+    .collect-page .collect-hero .home-hero__glow {
+        width: 220px;
+        height: 220px;
+        left: 50px;
+    }
+
+    .collect-hero__content {
+        gap: 16px;
+    }
+
+    .collect-hero__heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 640px) {
+    .collect-page .collect-hero {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .collect-hero__bar {
+        padding: 0 20px;
+        gap: 12px;
+    }
+
+    .collect-hero__bar-title {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 430px) {
+    .collect-page {
+        --hero-height: 168px;
+        --collect-peek: 60px;
+    }
+
+    .collect-page .collect-hero {
+        padding-top: 20px;
+        padding-bottom: 24px;
+        padding-left: 16px;
+        padding-right: 16px;
+        background-image:
+            radial-gradient(ellipse 380px 240px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .collect-page .collect-hero .home-hero__glow {
+        width: 200px;
+        height: 200px;
+        left: 40px;
+    }
+
+    .collect-hero__content {
+        gap: 14px;
+    }
+
+    .collect-hero__top {
+        gap: 12px;
+    }
+
+    .collect-hero__title {
+        font-size: 26px;
+    }
+
+    .collect-hero__meta {
+        font-size: 13px;
+    }
+
+    .collect-hero__btn--icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .collect-tabs__btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    /* rolled-up strip */
+    .collect-hero__bar {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .collect-hero__bar-title {
+        font-size: 16px;
+    }
+
+    .collect-hero__bar-tab {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+
+    .collect-hero__settings {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 375px) {
+    .collect-page {
+        --hero-height: 156px;
+        --collect-peek: 56px;
+    }
+
+    .collect-page .collect-hero {
+        padding-top: 16px;
+        padding-bottom: 20px;
+        padding-left: 14px;
+        padding-right: 14px;
+        background-image:
+            radial-gradient(ellipse 320px 200px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .collect-page .collect-hero .home-hero__glow {
+        width: 160px;
+        height: 160px;
+        left: 32px;
+    }
+
+    .collect-hero__title {
+        font-size: 24px;
+    }
+
+    .collect-hero__btn--icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .collect-tabs__btn {
+        padding: 9px 12px;
+        font-size: 12.5px;
+    }
+
+    .collect-hero__bar {
+        padding: 0 14px;
+    }
+
+    .collect-hero__bar-title {
+        font-size: 15px;
+    }
+}
+
+
+/* ---------- Tasks Today: live collection queue ---------- */
+.collect-section--tasks {
+    align-items: start;
+}
+
+.collect-refresh {
+    margin-top: 16px;
+    height: 40px;
+    padding: 0 18px;
+}
+
+.collect-task-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.collect-task-summary>div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .045);
+}
+
+.collect-task-summary span {
+    color: rgba(255, 255, 255, .62);
+    font-size: 12px;
+}
+
+.collect-task-summary strong {
+    color: #fff;
+    font-size: 19px;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.collect-task-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.collect-task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px;
+    border-bottom: 1px solid #ececec;
+    animation: collect-rise .35s ease both;
+}
+
+.collect-task:last-child {
+    border-bottom: 0;
+}
+
+.collect-task.is-passed {
+    opacity: .58;
+}
+
+.collect-task__details {
+    min-width: 0;
+}
+
+.collect-task__name {
+    margin-bottom: 6px;
+    color: #111;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.collect-task__numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 10px;
+    color: #666;
+    font-size: 13px;
+}
+
+.collect-task__numbers strong {
+    color: #111;
+    font-variant-numeric: tabular-nums;
+}
+
+.collect-task__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.collect-task__actions .collect-btn {
+    height: 40px;
+    padding: 0 18px;
+    font-size: 14px;
+}
+
+.collect-btn--pass {
+    border-color: #d5d5d5;
+    background: #fff;
+    color: #111;
+}
+
+.collect-btn--pass:hover:not(:disabled) {
+    background: #f1f1f1;
+}
+
+.collect-task__actions .collect-btn:disabled {
+    opacity: .6;
+}
+
+@media (max-width: 640px) {
+    .collect-task-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .collect-task {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .collect-task__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .collect-task__actions .collect-btn {
+        width: 100%;
+    }
+}
