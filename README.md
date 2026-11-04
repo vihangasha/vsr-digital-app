@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# REIPER
 
-## Getting Started
+**A Retail Installment Management System**
 
-First, run the development server:
+REIPER is a fully functional web application developed by **RocketCode**
+and **Vihanga Jayakody**. It is designed for retail stores that provide
+goods to customers through easy-installment payment plans.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The application helps businesses manage customer information,
+installment accounts, payments, collections, outstanding balances, and
+day-to-day operations through a centralized management system.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+REIPER is built around practical, commonly understood business
+workflows. Its default business logic provides a foundation that can be
+customized to match the specific policies and operational requirements
+of each retail business.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+-   **Customer Management** --- Maintain customer profiles, registration
+    details, and related information.
+-   **Installment Management** --- Create and manage customer accounts
+    based on installment payment arrangements.
+-   **Flexible Payment Plans** --- Support different installment
+    frequencies and payment-plan structures.
+-   **Payment Tracking** --- Record payments and monitor paid amounts,
+    outstanding balances, and remaining installments.
+-   **Account Monitoring** --- View active accounts and track their
+    payment progress.
+-   **Receivables Management** --- Review outstanding amounts and
+    upcoming collection obligations.
+-   **Completed and Finalized Accounts** --- Manage completed accounts
+    and retain finalized records for future reference.
+-   **Customer History** --- Keep customer and account information
+    available for operational follow-up.
+-   **User and Role Management** --- Control application access
+    according to configured user roles and permissions.
+-   **Dashboard** --- View important operational and financial
+    information in one place.
 
-## Learn More
+## Customization
 
-To learn more about Next.js, take a look at the following resources:
+REIPER is available for customization to suit the individual
+requirements of each business.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Depending on the business workflow, the application can be adapted in
+areas such as:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+-   Installment frequencies and payment schedules
+-   Interest rates and calculation methods
+-   Payment, collection, and settlement rules
+-   Customer registration fields and account identifiers
+-   Account statuses and business workflows
+-   User roles and access permissions
+-   Dashboard content and reporting requirements
+-   Additional business-specific features
 
-## Deploy on Vercel
+Customization requirements can be discussed and scoped according to the
+needs of the business.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-   **Product:** REIPER
+-   **Developed by:** RocketCode and Vihanga Jayakody
+-   **Application type:** Retail installment management
+-   **Customization:** Available
+
+## About
+
+REIPER aims to make installment-based retail operations easier to
+organize and manage by bringing essential customer, account, and payment
+workflows into one application.
+
+*Features and business rules may vary depending on the configuration and
+customizations implemented for each business.*
