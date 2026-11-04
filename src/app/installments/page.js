@@ -471,19 +471,24 @@ export default function CollectPage() {
 
         if (!sessionCustomer?.regNo || paymentLoading) return;
 
-        const amount =
-            paymentType === "settlement"
-                ? Number(
-                    sessionCustomer.raw?.outstanding ??
-                    sessionCustomer.raw?.dueAmount ??
-                    sessionCustomer.due ??
-                    0
-                )
-                : Number(sessionCustomer.installment?.amount ?? 0);
+        const isMint = String(sessionCustomer.regNo)
+            .trim()
+            .toUpperCase()
+            .startsWith("MINT-");
 
-        if (!Number.isFinite(amount) || amount <= 0) {
+        if (paymentType === "settlement" && !isMint) {
+            alert("Full settlement is available only for MINT accounts.");
+            return;
+        }
+
+        const amount = Number(sessionCustomer.installment?.amount ?? 0);
+
+        if (
+            paymentType === "installment" &&
+            (!Number.isFinite(amount) || amount <= 0)
+        ) {
             alert(
-                "The amount to collect is invalid. Refresh today's tasks and try again."
+                "The installment amount is invalid. Refresh today's tasks and try again."
             );
             return;
         }
@@ -493,9 +498,14 @@ export default function CollectPage() {
                 ? "full settlement"
                 : "scheduled installment";
 
+        const confirmationDetails =
+            paymentType === "settlement"
+                ? "The system will fetch the latest outstanding principal from Firebase and add one month's interest. The final amount will be calculated by the server."
+                : `Amount: ${money(amount)}`;
+
         const confirmed = window.confirm(
             `Confirm ${description} for ${sessionCustomer.name} (${sessionCustomer.regNo})?\n\n` +
-            `Amount shown: ${money(amount)}\n\nContinue?`
+            `${confirmationDetails}\n\nContinue?`
         );
 
         if (!confirmed) return;
@@ -1021,17 +1031,22 @@ export default function CollectPage() {
                                                                     : "Collect Installment"}
                                                             </button>
 
-                                                            <button
-                                                                type="button"
-                                                                className="collect-btn collect-btn--pass"
-                                                                onClick={() => collectPayment("settlement")}
-                                                                disabled={
-                                                                    paymentLoading ||
-                                                                    status === "collecting"
-                                                                }
-                                                            >
-                                                                Full Settlement
-                                                            </button>
+                                                            {String(customer.regNo || "")
+                                                                .trim()
+                                                                .toUpperCase()
+                                                                .startsWith("MINT-") && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="collect-btn collect-btn--pass"
+                                                                        onClick={() => collectPayment("settlement")}
+                                                                        disabled={
+                                                                            paymentLoading ||
+                                                                            status === "collecting"
+                                                                        }
+                                                                    >
+                                                                        Full Settlement
+                                                                    </button>
+                                                                )}
                                                         </div>
                                                     </div>
                                                 </div>

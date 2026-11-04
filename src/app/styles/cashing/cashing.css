@@ -1,0 +1,1659 @@
+/* ============================================
+   Cashing page — black & white theme
+   The hero banner itself comes from home.css (unchanged).
+   This file only adds: hero tabs + page content.
+   ============================================ */
+
+/* ---------- Rolling banner ----------
+   Same mechanism as the Customers page. The banner keeps its full size and
+   background (from home.css). Rolled up, it is pushed above the screen so only
+   its bottom strip (page name + current tab + settings) shows, and the content
+   below gets the space. Open, it slides over the page instead of pushing it. */
+
+.cashing-page {
+    /* space the hero reserves for the top navbar; 0 on mobile, where the navbar sits at the bottom */
+    --cashing-nav-offset: var(--navbar-height, 72px);
+    /* total hero height, measured from the top of the screen (navbar sits on top of it) */
+    --hero-height: 270px;
+    /* height of the strip that stays visible (below the navbar) while the banner is rolled up */
+    --cashing-peek: 64px;
+    --cashing-collapsed-height: calc(var(--cashing-nav-offset) + var(--cashing-peek));
+    /* how far the full banner is pushed up out of sight */
+    --cashing-hero-shift: calc(var(--hero-height) - var(--cashing-collapsed-height));
+}
+
+.cashing-page .cashing-hero {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--hero-height);
+    box-sizing: border-box;
+    z-index: 50;
+    overflow: hidden;
+    padding-top: calc(var(--cashing-nav-offset) + 48px);
+    padding-bottom: 40px;
+    padding-left: 56px;
+    padding-right: 56px;
+    will-change: transform;
+}
+
+.cashing-page .cashing-hero.is-collapsed {
+    transform: translateY(calc(-1 * var(--cashing-hero-shift)));
+    transition:
+        transform 0.85s cubic-bezier(0.7, 0, 0.2, 1),
+        box-shadow 0.5s ease;
+}
+
+.cashing-page .cashing-hero.is-open {
+    transform: translateY(0);
+    box-shadow: 0 0.5px 0 0 #454545, 0 30px 70px -10px rgba(0, 0, 0, 0.6);
+    transition:
+        transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.6s ease;
+}
+
+/* Hero content */
+
+.cashing-hero__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cashing-hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.cashing-hero__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.cashing-hero__title {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+}
+
+.cashing-hero__meta {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* Round roll-up button inside the open banner */
+.cashing-hero__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.cashing-hero__btn--icon {
+    width: 44px;
+    height: 44px;
+}
+
+.cashing-hero__btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.cashing-hero__btn:active {
+    transform: scale(0.94);
+}
+
+.cashing-hero__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.cashing-hero__btn svg {
+    transition: transform 0.3s ease;
+}
+
+.cashing-hero__btn:hover svg {
+    transform: translateY(-2px);
+}
+
+/* Hidden content leaves the tab order and screen readers once it is out of sight */
+.cashing-hero.is-collapsed .cashing-hero__content {
+    opacity: 0;
+    visibility: hidden;
+    /* fade out fast, so it is gone before the rolled-up strip text fades in */
+    transition: opacity 0.22s ease, visibility 0s linear 0.85s;
+}
+
+.cashing-hero.is-open .cashing-hero__content {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease;
+}
+
+/* Content drops in after the banner starts sliding down */
+.cashing-hero.is-open .cashing-hero__top {
+    animation: cashing-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.cashing-hero.is-open .cashing-tabs {
+    animation: cashing-hero-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
+}
+
+@keyframes cashing-hero-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Rolled-up strip */
+
+.cashing-hero__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: var(--cashing-peek);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 56px;
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.4s ease 0.5s, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.cashing-hero.is-open .cashing-hero__bar {
+    opacity: 0;
+    transform: translateY(14px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.cashing-hero__settings {
+    flex: 0 0 auto;
+    /* always pinned to the right edge of the strip */
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.cashing-hero__settings svg {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cashing-hero__settings:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.cashing-hero__settings:hover svg {
+    transform: rotate(45deg);
+}
+
+.cashing-hero__settings:active {
+    transform: scale(0.94);
+}
+
+.cashing-hero__settings:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.cashing-hero__bar-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    color: #ffffff;
+}
+
+.cashing-hero__bar-tab {
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: cashing-chip-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cashing-chip-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Dim the page behind the open banner; clicking it rolls the banner up */
+.cashing-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+
+.cashing-scrim.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.6s ease;
+}
+
+/* ---------- Hero tabs ---------- */
+
+.cashing-tabs {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    width: min(100%, 560px);
+    min-width: 0;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* The tabs always stay on one line; when they do not fit, this track scrolls sideways */
+.cashing-tabs__scroll {
+    --cashing-fade-l: 0px;
+    --cashing-fade-r: 0px;
+    position: relative;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 999px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--cashing-fade-l), #000 calc(100% - var(--cashing-fade-r)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--cashing-fade-l), #000 calc(100% - var(--cashing-fade-r)), transparent 100%);
+}
+
+.cashing-tabs__scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* fade the edge that still has tabs hidden behind it (set from JS) */
+.cashing-tabs__scroll[data-scroll-start="false"] {
+    --cashing-fade-l: 22px;
+}
+
+.cashing-tabs__scroll[data-scroll-end="false"] {
+    --cashing-fade-r: 22px;
+}
+
+.cashing-tabs__scroll.is-dragging {
+    cursor: grabbing;
+}
+
+.cashing-tabs__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cashing-tabs__indicator.is-ready {
+    opacity: 1;
+    transition:
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cashing-tabs__btn {
+    position: relative;
+    z-index: 1;
+    flex: 1 0 auto;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.cashing-tabs__btn:hover {
+    color: #ffffff;
+}
+
+.cashing-tabs__btn.is-active {
+    color: #000000;
+}
+
+.cashing-tabs__btn:focus-visible {
+    outline: 2px solid #ffffff;
+    /* inside the button: the scrolling track would clip an outer outline */
+    outline-offset: -3px;
+}
+
+.cashing-tabs__btn.is-active:focus-visible {
+    outline-color: #000000;
+    outline-offset: -4px;
+}
+
+/* ---------- Page + single dark card (same pattern as the register form) ---------- */
+
+.cashing-page {
+    --cashing-gap: 24px;
+    --cashing-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --cashing-surface-bg:
+        radial-gradient(ellipse 900px 480px at 88% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+        linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    background: #171717;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.cashing-content {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1192px;
+    margin: 0 auto;
+    /* only the rolled-up strip is reserved; the open banner slides over the page */
+    padding: calc(var(--cashing-collapsed-height) + var(--cashing-gap) + 20px) 56px 96px;
+}
+
+.cashing-surface {
+    position: relative;
+    border-radius: 10px;
+    background-image: var(--cashing-surface-bg);
+    background-color: #000000;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2px #c7c7c7;
+    animation: cashing-card-in 0.6s var(--cashing-ease) both;
+}
+
+@keyframes cashing-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Clipping layer: decoration bleeds off the edges, the card itself isn't clipped */
+.cashing-surface__bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.cashing-surface__bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+    background-size: 3px 3px;
+    background-position: 0 0, 1.5px 1.5px;
+}
+
+.cashing-surface__glow {
+    position: absolute;
+    top: 120px;
+    left: 90px;
+    width: 320px;
+    height: 320px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 68%);
+}
+
+.cashing-surface__stripe {
+    position: absolute;
+    width: 14px;
+    height: 90px;
+    border-radius: 10px;
+    background: #ffffff;
+    opacity: 0.14;
+    transform: rotate(38deg);
+}
+
+.cashing-surface__stripe--1 {
+    top: -24px;
+    left: 62%;
+    height: 150px;
+    opacity: 0.25;
+}
+
+.cashing-surface__stripe--2 {
+    top: 40px;
+    left: 55%;
+    width: 6px;
+    height: 500px;
+    opacity: 0.12;
+}
+
+.cashing-surface__stripe--3 {
+    top: 60px;
+    left: 97%;
+    width: 18px;
+    height: 110px;
+    opacity: 0.2;
+}
+
+.cashing-surface__stripe--4 {
+    top: 55%;
+    left: -1%;
+    width: 5px;
+    height: 190px;
+    opacity: 0.08;
+}
+
+.cashing-surface__stripe--5 {
+    bottom: 25px;
+    left: 2%;
+    height: 200px;
+    opacity: 0.08;
+    animation: cashing-surface-shimmer 5s ease-in-out infinite;
+}
+
+.cashing-surface__stripe--6 {
+    bottom: -30px;
+    left: 78%;
+    width: 10px;
+    height: 150px;
+    opacity: 0.1;
+}
+
+@keyframes cashing-surface-shimmer {
+
+    0%,
+    100% {
+        opacity: 0.05;
+    }
+
+    50% {
+        opacity: 0.15;
+    }
+}
+
+/* ---------- Header ---------- */
+
+.cashing-header {
+    position: relative;
+    z-index: 1;
+    padding: 36px 40px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cashing-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+}
+
+.cashing-header p {
+    margin: 6px 0 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* ---------- Sections: intro on the left, content on the right ---------- */
+
+.cashing-panel {
+    position: relative;
+    z-index: 1;
+    /* plays when switching tabs (panel is re-mounted by key) */
+    animation: cashing-panel-in 0.4s var(--cashing-ease) both;
+}
+
+@keyframes cashing-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.cashing-section {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 40px;
+    padding: 32px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cashing-section--last {
+    border-bottom: none;
+    padding-bottom: 40px;
+}
+
+.cashing-section__intro h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.cashing-section__intro p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cashing-section__body {
+    min-width: 0;
+}
+
+.cashing-count {
+    min-width: 26px;
+    padding: 2px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Lookup form ---------- */
+
+.cashing-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cashing-field {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.cashing-field label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    transition: color 0.2s ease;
+}
+
+.cashing-field:focus-within label {
+    color: #ffffff;
+}
+
+/* white field on the dark card, like the register form */
+.cashing-input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 16px;
+    outline: none;
+    transition: box-shadow 0.2s ease;
+}
+
+.cashing-input::placeholder {
+    color: #8a8a8a;
+}
+
+.cashing-input:focus {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+.cashing-input:disabled {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
+/* ---------- Buttons ---------- */
+
+.cashing-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 46px;
+    padding: 0 26px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* on the dark card */
+.cashing-btn--light {
+    background: #ffffff;
+    color: #000000;
+}
+
+.cashing-btn--light:hover:not(:disabled) {
+    opacity: 0.88;
+}
+
+.cashing-btn--light:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* on the white sheet */
+.cashing-btn--dark {
+    background: #000000;
+    color: #ffffff;
+}
+
+.cashing-btn--dark:hover:not(:disabled) {
+    background: #222222;
+}
+
+.cashing-btn--dark:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 3px;
+}
+
+.cashing-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.cashing-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.cashing-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: cashing-spin 0.7s linear infinite;
+}
+
+@keyframes cashing-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- White sheet (the data surface, like the Customers table) ---------- */
+
+.cashing-sheet {
+    overflow: hidden;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111111;
+}
+
+.cashing-empty {
+    margin: 0;
+    padding: 36px 18px;
+    text-align: center;
+    font-size: 15px;
+    color: #666666;
+}
+
+.cashing-msg {
+    margin: 0;
+    padding: 20px 22px;
+    border-left: 3px solid #000000;
+    font-size: 15px;
+    color: #222222;
+    animation: cashing-rise 0.35s ease both;
+}
+
+@keyframes cashing-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Loading skeleton */
+
+.cashing-skeleton {
+    display: grid;
+    gap: 12px;
+    padding: 22px;
+}
+
+.cashing-skeleton__row {
+    display: block;
+    height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #efefef 25%, #f8f8f8 50%, #efefef 75%);
+    background-size: 200% 100%;
+    animation: cashing-shimmer 1.2s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 80ms);
+}
+
+.cashing-skeleton__row:nth-child(1) {
+    width: 45%;
+    height: 24px;
+}
+
+.cashing-skeleton__row:nth-child(even) {
+    width: 80%;
+}
+
+@keyframes cashing-shimmer {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}
+
+/* Outlined pill: registration number and plan type */
+
+.cashing-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 999px;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222222;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Customer account (inside the sheet) ---------- */
+
+.cashing-account {
+    animation: cashing-rise 0.4s var(--cashing-ease) both;
+}
+
+/* Success notice after collecting */
+
+.cashing-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: #000000;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    animation: cashing-rise 0.35s ease both;
+}
+
+.cashing-notice__tick {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    animation: cashing-draw 0.45s 0.15s ease forwards;
+}
+
+@keyframes cashing-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.cashing-account__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    padding: 22px 22px 18px;
+    box-shadow: inset 0 -1px 0 #e5e5e5;
+}
+
+.cashing-account__name {
+    font-size: 24px;
+    font-weight: 800;
+    color: #000000;
+}
+
+.cashing-account__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+    margin: 0;
+    padding: 20px 22px 24px;
+}
+
+.cashing-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    animation: cashing-rise 0.45s var(--cashing-ease) both;
+    animation-delay: calc(120ms + var(--i) * 70ms);
+}
+
+.cashing-row dt {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444444;
+}
+
+.cashing-row dd {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111111;
+    overflow-wrap: anywhere;
+}
+
+.cashing-row__num {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Installment + the action it leads to */
+
+.cashing-account__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 18px 22px;
+    background: #fafafa;
+    box-shadow: inset 0 1px 0 #e5e5e5;
+}
+
+.cashing-due {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cashing-due__label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444444;
+}
+
+.cashing-due__amount {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #000000;
+    font-variant-numeric: tabular-nums;
+}
+
+.cashing-due__hint {
+    font-size: 14px;
+    color: #666666;
+}
+
+/* ---------- Session log ---------- */
+
+.cashing-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cashing-log__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    transition: background-color 0.2s ease;
+    animation: cashing-rise 0.35s ease both;
+}
+
+.cashing-log__item+.cashing-log__item {
+    border-top: 1px solid #ececec;
+}
+
+.cashing-log__item:hover {
+    background: #f5f5f5;
+}
+
+.cashing-log__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #000000;
+}
+
+.cashing-log__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #666666;
+    font-variant-numeric: tabular-nums;
+}
+
+.cashing-log__meta .cashing-badge {
+    padding: 2px 10px;
+    font-size: 12px;
+}
+
+.cashing-log__amount {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: #000000;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1080px) {
+    .cashing-content {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+}
+
+@media (max-width: 900px) {
+    .cashing-header {
+        padding: 30px 28px 24px;
+    }
+
+    .cashing-section {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding: 28px;
+    }
+
+    .cashing-section__intro p {
+        max-width: 480px;
+    }
+
+    .cashing-section--last {
+        padding-bottom: 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    .cashing-page {
+        --cashing-gap: 16px;
+    }
+
+    .cashing-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .cashing-header h2 {
+        font-size: 24px;
+    }
+
+    .cashing-header,
+    .cashing-section {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .cashing-field {
+        flex-basis: 100%;
+    }
+
+    .cashing-form .cashing-btn,
+    .cashing-account__foot .cashing-btn {
+        width: 100%;
+    }
+
+    .cashing-account__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .cashing-surface__stripe--5 {
+        animation: none;
+    }
+
+    .cashing-page .cashing-hero.is-collapsed,
+    .cashing-page .cashing-hero.is-open,
+    .cashing-hero__bar,
+    .cashing-scrim {
+        transition-duration: 0.01s;
+        transition-delay: 0s;
+    }
+
+    .cashing-hero.is-open .cashing-hero__top,
+    .cashing-hero.is-open .cashing-tabs,
+    .cashing-hero__bar-tab {
+        animation: none;
+    }
+
+    .cashing-surface,
+    .cashing-panel,
+    .cashing-account,
+    .cashing-row,
+    .cashing-notice,
+    .cashing-log__item,
+    .cashing-msg {
+        animation: none;
+        transition: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .cashing-notice__tick {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+
+    .cashing-skeleton__row {
+        animation: none;
+    }
+}
+
+/* ============================================
+   Rolling banner — responsive (same ladder as Customers)
+   ============================================ */
+
+@media (max-width: 1080px) {
+    .cashing-page .cashing-hero {
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+
+    .cashing-hero__bar {
+        padding: 0 32px;
+    }
+}
+
+/* Phones & small tablets: navbar is at the bottom, no stripes, grain + gradients kept */
+@media (max-width: 820px) {
+    .cashing-page {
+        --cashing-nav-offset: 0px;
+        --hero-height: 190px;
+    }
+
+    .cashing-page .cashing-hero {
+        padding-top: 24px;
+        padding-bottom: 28px;
+        background-image:
+            radial-gradient(ellipse 420px 260px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .cashing-page .cashing-hero .home-hero__stripes,
+    .cashing-page .cashing-hero .home-hero__stripe {
+        display: none !important;
+    }
+
+    .cashing-page .cashing-hero .home-hero__glow {
+        width: 220px;
+        height: 220px;
+        left: 50px;
+    }
+
+    .cashing-hero__content {
+        gap: 16px;
+    }
+
+    .cashing-hero__heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 640px) {
+    .cashing-page .cashing-hero {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .cashing-hero__bar {
+        padding: 0 20px;
+        gap: 12px;
+    }
+
+    .cashing-hero__bar-title {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 430px) {
+    .cashing-page {
+        --hero-height: 168px;
+        --cashing-peek: 60px;
+    }
+
+    .cashing-page .cashing-hero {
+        padding-top: 20px;
+        padding-bottom: 24px;
+        padding-left: 16px;
+        padding-right: 16px;
+        background-image:
+            radial-gradient(ellipse 380px 240px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .cashing-page .cashing-hero .home-hero__glow {
+        width: 200px;
+        height: 200px;
+        left: 40px;
+    }
+
+    .cashing-hero__content {
+        gap: 14px;
+    }
+
+    .cashing-hero__top {
+        gap: 12px;
+    }
+
+    .cashing-hero__title {
+        font-size: 26px;
+    }
+
+    .cashing-hero__meta {
+        font-size: 13px;
+    }
+
+    .cashing-hero__btn--icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .cashing-tabs__btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    /* rolled-up strip */
+    .cashing-hero__bar {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .cashing-hero__bar-title {
+        font-size: 16px;
+    }
+
+    .cashing-hero__bar-tab {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+
+    .cashing-hero__settings {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 375px) {
+    .cashing-page {
+        --hero-height: 156px;
+        --cashing-peek: 56px;
+    }
+
+    .cashing-page .cashing-hero {
+        padding-top: 16px;
+        padding-bottom: 20px;
+        padding-left: 14px;
+        padding-right: 14px;
+        background-image:
+            radial-gradient(ellipse 320px 200px at 90% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
+            linear-gradient(122deg, #000000 0%, #060606 30%, #101010 52%, #1c1c1c 75%, #2b2b2b 100%);
+    }
+
+    .cashing-page .cashing-hero .home-hero__glow {
+        width: 160px;
+        height: 160px;
+        left: 32px;
+    }
+
+    .cashing-hero__title {
+        font-size: 24px;
+    }
+
+    .cashing-hero__btn--icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .cashing-tabs__btn {
+        padding: 9px 12px;
+        font-size: 12.5px;
+    }
+
+    .cashing-hero__bar {
+        padding: 0 14px;
+    }
+
+    .cashing-hero__bar-title {
+        font-size: 15px;
+    }
+}
+
+
+/* ---------- Tasks Today: live collection queue ---------- */
+.cashing-section--tasks {
+    align-items: start;
+}
+
+.cashing-refresh {
+    margin-top: 16px;
+    height: 40px;
+    padding: 0 18px;
+}
+
+.cashing-task-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.cashing-task-summary>div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .045);
+}
+
+.cashing-task-summary span {
+    color: rgba(255, 255, 255, .62);
+    font-size: 12px;
+}
+
+.cashing-task-summary strong {
+    color: #fff;
+    font-size: 19px;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.cashing-task-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cashing-task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px;
+    border-bottom: 1px solid #ececec;
+    animation: cashing-rise .35s ease both;
+}
+
+.cashing-task:last-child {
+    border-bottom: 0;
+}
+
+.cashing-task.is-passed {
+    opacity: .58;
+}
+
+.cashing-task__details {
+    min-width: 0;
+}
+
+.cashing-task__name {
+    margin-bottom: 6px;
+    color: #111;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.cashing-task__numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 10px;
+    color: #666;
+    font-size: 13px;
+}
+
+.cashing-task__numbers strong {
+    color: #111;
+    font-variant-numeric: tabular-nums;
+}
+
+.cashing-task__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.cashing-task__actions .cashing-btn {
+    height: 40px;
+    padding: 0 18px;
+    font-size: 14px;
+}
+
+.cashing-btn--pass {
+    border-color: #d5d5d5;
+    background: #fff;
+    color: #111;
+}
+
+.cashing-btn--pass:hover:not(:disabled) {
+    background: #f1f1f1;
+}
+
+.cashing-task__actions .cashing-btn:disabled {
+    opacity: .6;
+}
+
+@media (max-width: 640px) {
+    .cashing-task-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .cashing-task {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .cashing-task__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cashing-task__actions .cashing-btn {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   Cashing — form (Option 1 / Option 2) + records table (View)
+   ============================================ */
+
+.cashing-form {
+    display: block;
+}
+
+.cashing-form__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+}
+
+.cashing-form__grid .cashing-field {
+    flex: initial;
+}
+
+.cashing-field__hint {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.cashing-field__error {
+    margin-top: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.cashing-input.is-invalid {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+}
+
+/* Auto-calculated fields: read-only, dark on the dark card so they read as results, not inputs */
+.cashing-input--calc {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    cursor: default;
+}
+
+.cashing-input--calc:focus {
+    box-shadow: none;
+}
+
+.cashing-calc {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.cashing-calc>div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.cashing-calc span {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+}
+
+.cashing-calc strong {
+    color: #ffffff;
+    font-size: 19px;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.cashing-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.cashing-btn--ghost {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: #ffffff;
+}
+
+.cashing-btn--ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.cashing-btn--ghost:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.cashing-form__notice {
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+/* ---------- View tab: dark table (same look as the Home tables) ---------- */
+
+.cashing-view {
+    position: relative;
+    z-index: 1;
+    padding: 32px 40px 40px;
+}
+
+.cashing-view__head {
+    align-items: center;
+}
+
+.cashing-view__head h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cashing-view .cashing-refresh {
+    margin-top: 0;
+    flex: 0 0 auto;
+}
+
+.cashing-view .home-badge {
+    margin-left: 0;
+}
+
+.cashing-table th.is-num,
+.cashing-table td.is-num {
+    text-align: right;
+    padding-right: 16px;
+    font-variant-numeric: tabular-nums;
+}
+
+.cashing-table td:last-child,
+.cashing-table th:last-child {
+    padding-right: 0;
+}
+
+.cashing-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.cashing-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.cashing-table tfoot td {
+    padding-top: 16px;
+    border-bottom: 0;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+@media (max-width: 640px) {
+
+    .cashing-form__grid,
+    .cashing-calc {
+        grid-template-columns: 1fr;
+    }
+
+    .cashing-form__actions .cashing-btn {
+        width: 100%;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cashing-table tbody tr {
+        transition: none;
+    }
+}
+
+.cashing-form__notice {
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .cashing-view {
+        padding: 28px;
+    }
+}
+
+@media (max-width: 640px) {
+    .cashing-view {
+        padding: 24px 20px 28px;
+    }
+
+    .cashing-view__head {
+        align-items: flex-start;
+    }
+}

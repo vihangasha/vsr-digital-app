@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getNextBusinessPayDateFrom } from "@/lib/businessHolidays";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,128 +15,6 @@ function todayColombo() {
         month: "2-digit",
         day: "2-digit",
     }).format(new Date());
-}
-
-function parseDate(value) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
-        return null;
-    }
-
-    const [y, m, d] = value.split("-").map(Number);
-    const date = new Date(Date.UTC(y, m - 1, d));
-
-    if (
-        date.getUTCFullYear() !== y ||
-        date.getUTCMonth() !== m - 1 ||
-        date.getUTCDate() !== d
-    ) {
-        return null;
-    }
-
-    return date;
-}
-
-/*
- * Company collection holidays.
- *
- * Maintain this list using the official Sri Lankan Poya calendar.
- * The dates for 2028 are provisional and require verification.
- */
-const POYA_DATES = new Set([
-    // 2026
-    "2026-01-03",
-    "2026-02-01",
-    "2026-03-02",
-    "2026-04-01",
-    "2026-05-01",
-    "2026-05-02",
-    "2026-05-30",
-    "2026-06-29",
-    "2026-07-29",
-    "2026-08-27",
-    "2026-09-26",
-    "2026-10-25",
-    "2026-11-24",
-    "2026-12-23",
-
-    // 2027
-    "2027-01-22",
-    "2027-02-20",
-    "2027-03-22",
-    "2027-04-20",
-    "2027-05-19",
-    "2027-05-20",
-    "2027-06-18",
-    "2027-07-18",
-    "2027-08-16",
-    "2027-09-15",
-    "2027-10-15",
-    "2027-11-13",
-    "2027-12-13",
-
-    // 2028 - provisional; verify against the official calendar
-    "2028-01-12",
-    "2028-02-25",
-    "2028-03-25",
-    "2028-04-24",
-    "2028-05-23",
-    "2028-05-24",
-    "2028-06-22",
-    "2028-07-21",
-    "2028-08-20",
-    "2028-09-18",
-    "2028-10-18",
-    "2028-11-16",
-    "2028-12-15",
-]);
-
-function isCompanyHoliday(date) {
-    const dateString = date.toISOString().slice(0, 10);
-    const month = date.getUTCMonth() + 1;
-    const day = date.getUTCDate();
-
-    if (month === 1 && day === 1) {
-        return true;
-    }
-
-    // Company closes April 14 through April 20.
-    if (month === 4 && day >= 14 && day <= 20) {
-        return true;
-    }
-
-    return POYA_DATES.has(dateString);
-}
-
-function nextDate(regNo, currentDate) {
-    const prefix = regNo.split("-")[0];
-
-    const daysToAdd = {
-        D: 1,
-        W: 7,
-        M: 30,
-        MINT: 30,
-    }[prefix];
-
-    // Cheque accounts do not use a scheduled collection date.
-    if (daysToAdd === undefined) {
-        return "";
-    }
-
-    const date = parseDate(currentDate);
-
-    if (!date) {
-        throw new Error(
-            `Invalid nextPayDate for ${regNo}: expected YYYY-MM-DD.`
-        );
-    }
-
-    date.setUTCDate(date.getUTCDate() + daysToAdd);
-
-    while (isCompanyHoliday(date)) {
-        date.setUTCDate(date.getUTCDate() + 1);
-    }
-
-    return date.toISOString().slice(0, 10);
 }
 
 export async function POST(request) {
@@ -171,12 +50,26 @@ export async function POST(request) {
             );
         }
 
+        // Full settlement is restricted to MINT accounts.
+        // This validation is enforced by the API, not just the UI.
+        if (
+            paymentType === "settlement" &&
+            !regNo.startsWith("MINT-")
+        ) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Full settlement is currently available only for Monthly Interest (MINT) accounts.",
+                },
+                { status: 403 }
+            );
+        }
+
         if (!["installment", "settlement"].includes(paymentType)) {
             return NextResponse.json(
                 {
                     success: false,
-                    error:
-                        "Payment type must be installment or settlement.",
+                    error: "Payment type must be installment or settlement.",
                 },
                 { status: 400 }
             );
@@ -189,8 +82,7 @@ export async function POST(request) {
             return NextResponse.json(
                 {
                     success: false,
-                    error:
-                        "Scheduled collection for cheque-cashing accounts is not configured.",
+                    error: "Scheduled collection for cheque-cashing accounts is not configured.",
                 },
                 { status: 400 }
             );
@@ -206,7 +98,10 @@ export async function POST(request) {
             .limit(3);
 
         const payment = await adminDb.runTransaction(async (tx) => {
-            // Read all required documents before writing.
+            // -----------------------------------------
+            // 1. FETCH ACTIVE AFFAIR
+            // -----------------------------------------
+
             const affairSnap = await tx.get(affairRef);
 
             if (!affairSnap.exists) {
@@ -216,6 +111,26 @@ export async function POST(request) {
             }
 
             const affair = affairSnap.data();
+
+            const isMint = regNo.startsWith("MINT-");
+
+            // Prevent additional regular installments after
+            // the scheduled affair has reached pending status.
+            if (
+                String(affair.status || "")
+                    .trim()
+                    .toLowerCase() === "pending" &&
+                paymentType !== "settlement"
+            ) {
+                throw new Error(
+                    "This affair has completed its scheduled installments. Only MINT full settlement may be processed."
+                );
+            }
+
+            // -----------------------------------------
+            // 2. FETCH INSTALLMENT RECORD
+            // -----------------------------------------
+
             const loansSnap = await tx.get(loanQuery);
 
             if (loansSnap.size !== 1) {
@@ -232,11 +147,15 @@ export async function POST(request) {
 
             const affairRegNo = String(
                 affair.regNo || affairSnap.id
-            ).trim().toUpperCase();
+            )
+                .trim()
+                .toUpperCase();
 
             const loanRegNo = String(
                 loan.registrationNo || ""
-            ).trim().toUpperCase();
+            )
+                .trim()
+                .toUpperCase();
 
             if (
                 affairRegNo !== regNo ||
@@ -260,6 +179,10 @@ export async function POST(request) {
                 throw new Error("This loan is not active.");
             }
 
+            // -----------------------------------------
+            // 3. VALIDATE BALANCES
+            // -----------------------------------------
+
             const outstanding = Number(loan.outstanding);
             const installment = Number(loan.installment);
 
@@ -272,12 +195,64 @@ export async function POST(request) {
                 );
             }
 
-            const amount =
-                paymentType === "settlement"
+            const activeAffairDue = Number(affair.dueAmount);
+
+            if (
+                isMint &&
+                (
+                    !Number.isFinite(activeAffairDue) ||
+                    activeAffairDue < 0
+                )
+            ) {
+                throw new Error(
+                    "Invalid due amount on the active-affair record."
+                );
+            }
+
+            if (
+                isMint &&
+                Math.abs(activeAffairDue - outstanding) > 0.01
+            ) {
+                throw new Error(
+                    "The MINT principal balance does not match between the loan and active-affair records. Collection stopped for safety."
+                );
+            }
+
+            if (
+                !Number.isFinite(installment) ||
+                installment <= 0
+            ) {
+                throw new Error(
+                    "Invalid monthly interest amount on the loan record."
+                );
+            }
+
+            // -----------------------------------------
+            // 4. CALCULATE PAYMENT
+            // -----------------------------------------
+
+            /*
+             * MINT:
+             * Normal payment = monthly interest only.
+             * Full settlement = outstanding principal + one month's interest.
+             *
+             * Other accounts:
+             * Normal payment = scheduled installment.
+             * Settlement = remaining outstanding.
+             */
+
+            const amount = isMint
+                ? paymentType === "settlement"
+                    ? activeAffairDue + installment
+                    : installment
+                : paymentType === "settlement"
                     ? outstanding
                     : installment;
 
-            if (!Number.isFinite(amount) || amount <= 0) {
+            if (
+                !Number.isFinite(amount) ||
+                amount <= 0
+            ) {
                 throw new Error(
                     "The amount to collect must be greater than zero."
                 );
@@ -285,6 +260,7 @@ export async function POST(request) {
 
             if (
                 paymentType === "installment" &&
+                !isMint &&
                 amount > outstanding
             ) {
                 throw new Error(
@@ -292,14 +268,19 @@ export async function POST(request) {
                 );
             }
 
-            const newOutstanding = Math.max(
-                0,
-                outstanding - amount
-            );
+            const newOutstanding = isMint
+                ? paymentType === "settlement"
+                    ? 0
+                    : outstanding
+                : Math.max(0, outstanding - amount);
 
             const settled =
                 paymentType === "settlement" ||
-                newOutstanding === 0;
+                (!isMint && newOutstanding === 0);
+
+            // -----------------------------------------
+            // 5. COLLECTOR AND PAYMENT INFORMATION
+            // -----------------------------------------
 
             const collector =
                 user.name || user.email || user.uid;
@@ -314,20 +295,7 @@ export async function POST(request) {
             const oldLoanPaid = Number(loan.paidAmount);
             const oldAffairPaid = Number(affair.paidAmount);
 
-            /*
-             * Calculate cumulative interestPaid.
-             *
-             * Installment plans:
-             * Allocate equal interest portions based on the
-             * contracted interest and the expected installment count.
-             *
-             * MINT:
-             * Regular payments are interest-only.
-             * Settlement adds only the remaining contracted interest.
-             */
-            const oldInterestPaidRaw = Number(
-                loan.interestPaid
-            );
+            const oldInterestPaidRaw = Number(loan.interestPaid);
 
             const oldInterestPaid =
                 Number.isFinite(oldInterestPaidRaw) &&
@@ -336,23 +304,35 @@ export async function POST(request) {
                     : 0;
 
             const issuedAmount = Number(loan.issuedAmount);
-            const totalPayable = Number(loan.totalPayable);
+
+            const totalPayable =
+                loan.totalPayable == null
+                    ? null
+                    : Number(loan.totalPayable);
 
             if (
                 !Number.isFinite(issuedAmount) ||
-                issuedAmount < 0 ||
-                !Number.isFinite(totalPayable) ||
-                totalPayable < issuedAmount
+                issuedAmount <= 0 ||
+                (
+                    !isMint &&
+                    (
+                        !Number.isFinite(totalPayable) ||
+                        totalPayable < issuedAmount
+                    )
+                )
             ) {
                 throw new Error(
                     "Invalid issuedAmount or totalPayable on the loan record."
                 );
             }
 
-            const totalContractedInterest = Math.max(
-                0,
-                totalPayable - issuedAmount
-            );
+            // -----------------------------------------
+            // 6. INTEREST ACCOUNTING
+            // -----------------------------------------
+
+            const totalContractedInterest = isMint
+                ? 0
+                : Math.max(0, totalPayable - issuedAmount);
 
             const remainingContractedInterest = Math.max(
                 0,
@@ -361,35 +341,16 @@ export async function POST(request) {
 
             let interestIncrement = 0;
 
-            if (regNo.startsWith("MINT-")) {
-                // Monthly-interest regular collections are interest-only.
-                interestIncrement =
-                    paymentType === "settlement"
-                        ? remainingContractedInterest
-                        : Math.min(
-                            amount,
-                            remainingContractedInterest
-                        );
+            if (isMint) {
+                // MINT settlement includes one month's interest.
+                interestIncrement = installment;
             } else if (paymentType === "settlement") {
-                // Add any contracted interest not yet recorded as paid.
-                interestIncrement =
-                    remainingContractedInterest;
+                interestIncrement = remainingContractedInterest;
             } else {
-                const installmentCount =
-                    installment > 0
-                        ? Math.max(
-                            1,
-                            Math.round(
-                                totalPayable / installment
-                            )
-                        )
-                        : 0;
-
-                if (installmentCount === 0) {
-                    throw new Error(
-                        "Cannot calculate interest without a valid installment amount."
-                    );
-                }
+                const installmentCount = Math.max(
+                    1,
+                    Math.round(totalPayable / installment)
+                );
 
                 const interestPerInstallment =
                     totalContractedInterest / installmentCount;
@@ -400,16 +361,29 @@ export async function POST(request) {
                 );
             }
 
-            const newInterestPaid = Math.min(
-                totalContractedInterest,
-                Math.round(
-                    (oldInterestPaid + interestIncrement + Number.EPSILON) * 100
+            const newInterestPaid = isMint
+                ? Math.round(
+                    (
+                        oldInterestPaid +
+                        interestIncrement +
+                        Number.EPSILON
+                    ) * 100
                 ) / 100
-            );
+                : Math.min(
+                    totalContractedInterest,
+                    Math.round(
+                        (
+                            oldInterestPaid +
+                            interestIncrement +
+                            Number.EPSILON
+                        ) * 100
+                    ) / 100
+                );
 
-            /*
-             * Calculate the post-collection state.
-             */
+            // -----------------------------------------
+            // 7. UPDATE INSTALLMENT COUNTS
+            // -----------------------------------------
+
             const currentPaidCount = Math.max(
                 0,
                 Number(affair.paidCount) || 0
@@ -421,15 +395,21 @@ export async function POST(request) {
             );
 
             const totalPaid =
-                (Number.isFinite(oldAffairPaid)
-                    ? oldAffairPaid
-                    : 0) + amount;
+                (
+                    Number.isFinite(oldAffairPaid)
+                        ? oldAffairPaid
+                        : 0
+                ) + amount;
 
             const paymentCount = currentPaidCount + 1;
 
             const dueCount = settled
                 ? 0
                 : Math.max(0, currentDueCount - 1);
+
+            // -----------------------------------------
+            // 8. CREATE PAYMENT HISTORY
+            // -----------------------------------------
 
             const receiptData = {
                 paymentID,
@@ -441,50 +421,94 @@ export async function POST(request) {
                 paymentType,
                 paymentDate,
                 collectedBy: collector,
+
+                ...(isMint
+                    ? {
+                        principalAmount:
+                            paymentType === "settlement"
+                                ? activeAffairDue
+                                : 0,
+
+                        interestAmount: installment,
+                    }
+                    : {}),
             };
 
-            // Save the immutable payment-history record.
             tx.create(paymentRef, {
                 ...receiptData,
                 createdAt: FieldValue.serverTimestamp(),
             });
 
-            // Update installment balance and cumulative payment totals.
+            // -----------------------------------------
+            // 9. UPDATE INSTALLMENT DOCUMENT
+            // -----------------------------------------
+
             tx.update(loanRef, {
                 outstanding: newOutstanding,
+
                 paidAmount:
-                    (Number.isFinite(oldLoanPaid)
-                        ? oldLoanPaid
-                        : 0) + amount,
+                    (
+                        Number.isFinite(oldLoanPaid)
+                            ? oldLoanPaid
+                            : 0
+                    ) + amount,
+
                 interestPaid: newInterestPaid,
+
                 status: settled
                     ? "completed"
                     : loan.status || "active",
+
                 updatedAt: FieldValue.serverTimestamp(),
                 updatedBy: collector,
             });
 
-            if (settled) {
-                // Remove the account from active affairs after settlement.
-                tx.delete(affairRef);
+            // -----------------------------------------
+            // 10. UPDATE ACTIVE AFFAIR
+            // -----------------------------------------
+
+            /*
+             * IMPORTANT:
+             * Do not delete the activeAffairs document.
+             *
+             * When dueCount reaches zero:
+             * - status becomes pending
+             * - nextPayDate becomes an empty string
+             * - dueCount remains zero
+             *
+             * This applies to completed installment schedules
+             * and MINT full settlements.
+             */
+
+            if (dueCount === 0) {
+                tx.update(affairRef, {
+                    paidCount: paymentCount,
+                    paidAmount: totalPaid,
+                    dueAmount: newOutstanding,
+                    dueCount: 0,
+                    status: "pending",
+                    nextPayDate: "",
+                    updatedAt: FieldValue.serverTimestamp(),
+                });
             } else {
-                const scheduledDate = nextDate(
-                    regNo,
-                    String(affair.nextPayDate || "")
-                );
+                // Calculate the next collection date using
+                // the centralized business holiday utility.
+                const scheduledDate =
+                    getNextBusinessPayDateFrom(
+                        regNo,
+                        String(affair.nextPayDate || "")
+                    );
 
                 tx.update(affairRef, {
                     paidCount: paymentCount,
                     paidAmount: totalPaid,
                     dueAmount: newOutstanding,
                     dueCount,
-
-                    ...(scheduledDate
-                        ? { nextPayDate: scheduledDate }
-                        : {}),
+                    status: "active",
+                    nextPayDate: scheduledDate,
+                    updatedAt: FieldValue.serverTimestamp(),
                 });
 
-                // Keep installments.nextPayDate synchronized.
                 if (scheduledDate) {
                     tx.update(loanRef, {
                         nextPayDate: scheduledDate,
@@ -492,7 +516,10 @@ export async function POST(request) {
                 }
             }
 
-            // Return the values after collection for the receipt.
+            // -----------------------------------------
+            // 11. RETURN PAYMENT RESULT
+            // -----------------------------------------
+
             return {
                 ...receiptData,
                 paymentCount,
@@ -501,13 +528,19 @@ export async function POST(request) {
                 dueAmount: newOutstanding,
                 outstanding: newOutstanding,
                 settled,
+                affairStatus:
+                    dueCount === 0 ? "pending" : "active",
             };
         });
 
         return NextResponse.json(
-            { success: true, payment },
+            {
+                success: true,
+                payment,
+            },
             { status: 200 }
         );
+
     } catch (error) {
         console.error(
             "POST /api/collect-payments/add:",
@@ -522,14 +555,15 @@ export async function POST(request) {
         const status =
             message === "Unauthorized."
                 ? 401
-                : /required|valid registration|must be/i.test(
-                    message
-                )
+                : /required|valid registration|must be/i.test(message)
                     ? 400
                     : 409;
 
         return NextResponse.json(
-            { success: false, error: message },
+            {
+                success: false,
+                error: message,
+            },
             { status }
         );
     }

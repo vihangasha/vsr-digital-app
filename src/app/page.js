@@ -65,6 +65,27 @@ function getGreeting(hour) {
 
 const pad = (n) => String(n).padStart(2, "0");
 
+// completed-affairs API route
+const COMPLETED_AFFAIRS_ENDPOINT = "/api/affair-finalizing/get";
+const FINALIZED_AFFAIRS_ENDPOINT = "/api/finalized-affairs/get";
+const FINALIZE_AFFAIR_ENDPOINT = "/api/affair-finalizing/put";
+
+// Row values may arrive as numbers or formatted strings ("1,250.00", "Rs. 500"), so strip everything but digits.
+function toNumber(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const n = parseFloat(String(value ?? "").replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+const sumBy = (rows, key) => rows.reduce((total, row) => total + toNumber(row[key]), 0);
+
+const formatAmount = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatCount = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+const formatPercent = (n) => `${n.toFixed(1)}%`;
+
+// share of the expected money (returned + still due) that has come back
+const collectionRate = (returned, due) => (returned + due > 0 ? (returned / (returned + due)) * 100 : 0);
+
 function buildMonthCells(year, month) {
   const startOffset = new Date(year, month, 1).getDay();
   // 6 rows x 7 columns so the calendar never changes height between months
@@ -210,10 +231,164 @@ function CalendarCard({ now }) {
 }
 
 /* ------------------------------------------------------------------
-   Table panel (used by Active Affairs Status and All Receivables)
+   Analytics report (built from the fields of the tables below)
 ------------------------------------------------------------------ */
 
-function DataPanel({ i = 0, title, description, columns, rows, loading = false, rowKey, searchLabel }) {
+function AnalyticsCard({ i = 0, activeAffairs, receivables, completedAffairs, users, loading }) {
+  const a = useMemo(() => {
+    const issued = sumBy(activeAffairs, "issuedAmount");
+    const returned = sumBy(activeAffairs, "paidAmount");
+    const due = sumBy(activeAffairs, "dueAmount");
+
+    // nearest upcoming "Next Return" date (falls back to the earliest date if all are past)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let upcoming = null;
+    let earliest = null;
+    activeAffairs.forEach((row) => {
+      const t = Date.parse(row.nextPayDate);
+      if (Number.isNaN(t)) return;
+      if (!earliest || t < earliest.t) earliest = { t, label: row.nextPayDate };
+      if (t >= today.getTime() && (!upcoming || t < upcoming.t)) upcoming = { t, label: row.nextPayDate };
+    });
+
+    return {
+      accounts: activeAffairs.length,
+      issued,
+      returned,
+      due,
+      rate: collectionRate(returned, due),
+      returnsMade: sumBy(activeAffairs, "paidCount"),
+      dueCount: sumBy(activeAffairs, "dueCount"),
+      accountsWithDue: activeAffairs.filter((r) => toNumber(r.dueCount) > 0 || toNumber(r.dueAmount) > 0).length,
+      nextReturn: (upcoming || earliest)?.label ?? "-",
+    };
+  }, [activeAffairs]);
+
+  const breakdown = useMemo(() => {
+    const fromAffairs = (rows) => {
+      const returned = sumBy(rows, "paidAmount");
+      const due = sumBy(rows, "dueAmount");
+      return { records: rows.length, issued: sumBy(rows, "issuedAmount"), payable: null, returned, due, rate: collectionRate(returned, due) };
+    };
+    const rReturned = sumBy(receivables, "returned");
+    const rDue = sumBy(receivables, "due");
+    return [
+      { name: "Active Affairs", ...fromAffairs(activeAffairs) },
+      {
+        name: "All Receivables",
+        records: receivables.length,
+        issued: sumBy(receivables, "issued"),
+        payable: sumBy(receivables, "payable"),
+        returned: rReturned,
+        due: rDue,
+        rate: collectionRate(rReturned, rDue),
+      },
+      { name: "Completed Affairs", ...fromAffairs(completedAffairs) },
+    ];
+  }, [activeAffairs, receivables, completedAffairs]);
+
+  const roleSummary = useMemo(() => {
+    const counts = {};
+    users.forEach((u) => {
+      counts[u.role] = (counts[u.role] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([role, n]) => `${n} ${role}`)
+      .join(", ");
+  }, [users]);
+
+  const total = a.returned + a.due;
+  const returnedShare = total > 0 ? (a.returned / total) * 100 : 0;
+
+  const tiles = [
+    { label: "Total Issued", value: formatAmount(a.issued), sub: `${formatCount(a.accounts)} active affairs` },
+    { label: "Total Returned", value: formatAmount(a.returned), sub: `${formatCount(a.returnsMade)} returns made` },
+    { label: "Total Due", value: formatAmount(a.due), sub: `${formatCount(a.dueCount)} due ${a.dueCount === 1 ? "return" : "returns"}` },
+    { label: "Collection Rate", value: formatPercent(a.rate), sub: "Returned vs. returned + due" },
+    { label: "Affairs With Due", value: formatCount(a.accountsWithDue), sub: `of ${formatCount(a.accounts)} active` },
+    { label: "Next Return", value: a.nextReturn, sub: "Nearest upcoming date" },
+    { label: "Users", value: formatCount(users.length), sub: roleSummary || "No users yet" },
+  ];
+
+  return (
+    <Card i={i} className="home-analytics">
+      <CardHead
+        title="Analytical Report"
+        description={loading ? "Loading figures..." : "Totals worked out from the Active Affairs, Receivables and Completed Affairs tables below."}
+      />
+
+      <div className="home-analytics__tiles">
+        {tiles.map((t) => (
+          <div key={t.label} className="home-analytics__tile">
+            <span className="home-analytics__label">{t.label}</span>
+            <span className="home-analytics__value">{t.value}</span>
+            <span className="home-analytics__sub">{t.sub}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="home-analytics__split">
+        <div className="home-analytics__split-head">
+          <span>Returned vs. Due (Active Affairs)</span>
+          <span>{formatPercent(returnedShare)} returned</span>
+        </div>
+        <div
+          className="home-analytics__bar"
+          role="img"
+          aria-label={`${formatPercent(returnedShare)} returned, ${formatPercent(total > 0 ? 100 - returnedShare : 0)} due`}
+        >
+          <span className="home-analytics__bar-fill" style={{ width: `${returnedShare}%` }} />
+        </div>
+        <div className="home-analytics__legend">
+          <span>
+            <i className="home-analytics__dot is-returned" />
+            Returned {formatAmount(a.returned)}
+          </span>
+          <span>
+            <i className="home-analytics__dot" />
+            Due {formatAmount(a.due)}
+          </span>
+        </div>
+      </div>
+
+      <div className="home-table-wrap">
+        <table className="home-table">
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>Records</th>
+              <th>Issued</th>
+              <th>Payable</th>
+              <th>Returned</th>
+              <th>Due</th>
+              <th>Collection</th>
+            </tr>
+          </thead>
+          <tbody>
+            {breakdown.map((r) => (
+              <tr key={r.name}>
+                <td>{r.name}</td>
+                <td>{formatCount(r.records)}</td>
+                <td>{formatAmount(r.issued)}</td>
+                <td>{r.payable === null ? "-" : formatAmount(r.payable)}</td>
+                <td>{formatAmount(r.returned)}</td>
+                <td>{formatAmount(r.due)}</td>
+                <td>{formatPercent(r.rate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Table panel (used by Active Affairs Status, All Receivables and Completed Affairs)
+------------------------------------------------------------------ */
+
+function DataPanel({ i = 0, title, description, columns, rows, loading = false, rowKey, searchLabel, extraColumn }) {
   const [query, setQuery] = useState("");
 
   const visibleRows = rows.filter((row) =>
@@ -251,6 +426,7 @@ function DataPanel({ i = 0, title, description, columns, rows, loading = false, 
               {columns.map((c) => (
                 <th key={c.key}>{c.label}</th>
               ))}
+              {extraColumn && <th>{extraColumn.label}</th>}
             </tr>
           </thead>
           <tbody>
@@ -259,6 +435,7 @@ function DataPanel({ i = 0, title, description, columns, rows, loading = false, 
                 {columns.map((c) => (
                   <td key={c.key}>{row[c.key] ?? "-"}</td>
                 ))}
+                {extraColumn && <td>{extraColumn.render(row)}</td>}
               </tr>
             ))}
           </tbody>
@@ -278,6 +455,7 @@ const MAX_EXTEND_DAYS = 10000;
 
 function TaskExtenderCard({ onExtend }) {
   const [days, setDays] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [busy, setBusy] = useState(false);
   const [charged, setCharged] = useState(false);
   const [notice, setNotice] = useState(null); // { type: "success" | "error", text }
@@ -316,12 +494,13 @@ function TaskExtenderCard({ onExtend }) {
 
     setBusy(true);
     try {
-      await onExtend?.(count);
+      await onExtend?.(count, remarks.trim());
       showNotice(
         "success",
         `Business operations are successfully shifted forward by ${count} ${count === 1 ? "day" : "days"}.`
       );
       setDays("");
+      setRemarks("");
     } catch (error) {
       showNotice("error", error.message || "Could not move the working days. Try again.");
     } finally {
@@ -366,6 +545,20 @@ function TaskExtenderCard({ onExtend }) {
             Extend
           </button>
         </div>
+
+        <label className="home-extender__label" htmlFor="extend-remarks">
+          Remarks
+        </label>
+        <input
+          id="extend-remarks"
+          className="home-input home-input--text"
+          type="text"
+          maxLength={200}
+          autoComplete="off"
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+          placeholder="Reason for moving the days"
+        />
       </form>
 
       {/* Reserved space: stays empty until a result arrives, so the card never resizes */}
@@ -405,6 +598,15 @@ export default function Home() {
   const [loadingAffairs, setLoadingAffairs] = useState(false);
   const [loadingReceivables, setLoadingReceivables] = useState(false);
 
+  const [completedAffairs, setCompletedAffairs] = useState([]);
+  const [finalizedAffairs, setFinalizedAffairs] = useState([]);
+
+  const [loadingCompleted, setLoadingCompleted] = useState(false);
+  const [loadingFinalized, setLoadingFinalized] = useState(false);
+
+  const [affairView, setAffairView] = useState("completed");
+  const [finalizingRegNo, setFinalizingRegNo] = useState(null);
+  const [affairNotice, setAffairNotice] = useState(null);
   /* ------------------------------------------------------------------
    Profile data -  database
 ------------------------------------------------------------------ */
@@ -576,6 +778,90 @@ export default function Home() {
     };
   }, [currentUser]);
 
+  // Load affairs depending on the selected table view.
+  useEffect(() => {
+    if (!currentUser) return;
+
+    let cancelled = false;
+
+    async function loadAffairs() {
+      const isCompleted = affairView === "completed";
+
+      if (isCompleted) {
+        setLoadingCompleted(true);
+      } else {
+        setLoadingFinalized(true);
+      }
+
+      setAffairNotice(null);
+
+      try {
+        const endpoint = isCompleted
+          ? COMPLETED_AFFAIRS_ENDPOINT
+          : FINALIZED_AFFAIRS_ENDPOINT;
+
+        const response = await fetch(endpoint, {
+          method: "GET",
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Failed to load affairs.");
+        }
+
+        if (!cancelled) {
+          if (isCompleted) {
+            setCompletedAffairs(
+              Array.isArray(data.pendingAffairs)
+                ? data.pendingAffairs
+                : Array.isArray(data.completedAffairs)
+                  ? data.completedAffairs
+                  : []
+            );
+          } else {
+            setFinalizedAffairs(
+              Array.isArray(data.finalizedAffairs)
+                ? data.finalizedAffairs
+                : []
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Affairs loading error:", error);
+
+        if (!cancelled) {
+          setAffairNotice({
+            type: "error",
+            text: error.message || "Unable to load affairs.",
+          });
+
+          if (isCompleted) {
+            setCompletedAffairs([]);
+          } else {
+            setFinalizedAffairs([]);
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          if (isCompleted) {
+            setLoadingCompleted(false);
+          } else {
+            setLoadingFinalized(false);
+          }
+        }
+      }
+    }
+
+    loadAffairs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, affairView]);
+
   /*--------------------------------------------------------------------------*/
 
   useEffect(() => {
@@ -664,7 +950,61 @@ export default function Home() {
   const handleDeleteUser = (user) => { }; // Delete: confirm, then remove
   // Task Extender: shift business operations forward by `days`.
   // TODO: call your real endpoint here. Throw an Error to show it in the panel.
-  const handleExtendTasks = async (days) => { };
+  // `remarks` is the optional note typed in the Remarks field.
+  const handleExtendTasks = async (days, remarks) => { };
+
+  // Completed Affairs > Verification > Paid. TODO: call your endpoint to mark the affair as paid/verified.
+  // Confirm an affair and move it into finalized-affairs.
+  const handleFinalizeAffair = async (row) => {
+    const regNo = String(row.regNo || "").trim();
+
+    if (!regNo || finalizingRegNo) return;
+
+    const confirmed = window.confirm(
+      `Confirm and finalize affair ${regNo}?\n\nThis will update the customer's loyalty level and move the affair out of Active Affairs.`
+    );
+
+    if (!confirmed) return;
+
+    setFinalizingRegNo(regNo);
+    setAffairNotice(null);
+
+    try {
+      const response = await fetch(FINALIZE_AFFAIR_ENDPOINT, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ regNo }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to finalize affair.");
+      }
+
+      // Remove the finalized record from the current list immediately.
+      setCompletedAffairs((previous) =>
+        previous.filter((affair) => affair.regNo !== regNo)
+      );
+
+      setAffairNotice({
+        type: "success",
+        text: `${regNo} has been successfully finalized.`,
+      });
+    } catch (error) {
+      console.error("Affair finalization error:", error);
+
+      setAffairNotice({
+        type: "error",
+        text: error.message || "Unable to finalize affair.",
+      });
+    } finally {
+      setFinalizingRegNo(null);
+    }
+  };
 
   const handleEditProfile = () => { };
   const handleChangePassword = () => { };
@@ -793,8 +1133,18 @@ export default function Home() {
         )}
         <div className="home-content">
           <div className="home-main">
+            {/* Analytics report */}
+            <AnalyticsCard
+              i={0}
+              activeAffairs={activeAffairs}
+              receivables={receivables}
+              completedAffairs={completedAffairs}
+              users={users}
+              loading={loadingAffairs || loadingReceivables || loadingCompleted || loadingUsers}
+            />
+
             {/* Profile */}
-            <Card i={0}>
+            <Card i={1}>
               <CardHead
                 title="Profile"
                 description="Your login information."
@@ -840,7 +1190,7 @@ export default function Home() {
             </Card>
 
             {/* User management */}
-            <Card i={1}>
+            <Card i={2}>
               <CardHead
                 title="Users"
                 description="Add, view, edit and remove the people who can sign in."
@@ -930,7 +1280,7 @@ export default function Home() {
 
             {/* Active Affairs Status */}
             <DataPanel
-              i={2}
+              i={3}
               title="Active Affairs Status"
               description="Current status of every active affair."
               columns={ACTIVE_AFFAIRS_COLUMNS}
@@ -942,7 +1292,7 @@ export default function Home() {
 
             {/* All Receivables */}
             <DataPanel
-              i={3}
+              i={4}
               title="All Receivables"
               description="Every receivable with its payment and audit details."
               columns={RECEIVABLES_COLUMNS}
@@ -951,6 +1301,133 @@ export default function Home() {
               rowKey="id"
               searchLabel="Search receivables"
             />
+
+            {/* Completed Affairs */}
+            {/* Completed / Finalized Affairs */}
+            <Card i={5}>
+              <CardHead
+                title="Affairs"
+                description={
+                  affairView === "completed"
+                    ? "Completed affairs waiting for confirmation."
+                    : "Affairs that have already been finalized."
+                }
+              />
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                  marginBottom: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "6px",
+                    padding: "4px",
+                    borderRadius: "10px",
+                    background: "var(--nav-bg, rgba(128,128,128,0.10))",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setAffairView("completed")}
+                    disabled={affairView === "completed"}
+                    className="home-btn home-btn--sm"
+                    style={{
+                      opacity: affairView === "completed" ? 1 : 0.65,
+                      fontWeight: affairView === "completed" ? 700 : 400,
+                    }}
+                  >
+                    Completed
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAffairView("finalized")}
+                    disabled={affairView === "finalized"}
+                    className="home-btn home-btn--sm"
+                    style={{
+                      opacity: affairView === "finalized" ? 1 : 0.65,
+                      fontWeight: affairView === "finalized" ? 700 : 400,
+                    }}
+                  >
+                    Finalized
+                  </button>
+                </div>
+
+                <span style={{ fontSize: "12px", opacity: 0.7 }}>
+                  {affairView === "completed"
+                    ? `${completedAffairs.length} awaiting confirmation`
+                    : `${finalizedAffairs.length} finalized`}
+                </span>
+              </div>
+
+              {affairNotice && (
+                <div
+                  role="status"
+                  style={{
+                    padding: "10px 12px",
+                    marginBottom: "12px",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color:
+                      affairNotice.type === "error"
+                        ? "#dc5555"
+                        : "#249b65",
+                    background:
+                      affairNotice.type === "error"
+                        ? "rgba(220,85,85,0.09)"
+                        : "rgba(36,155,101,0.09)",
+                  }}
+                >
+                  {affairNotice.text}
+                </div>
+              )}
+
+              {affairView === "completed" ? (
+                <DataPanel
+                  i={5}
+                  title="Completed Affairs"
+                  description="Review and confirm completed affairs."
+                  columns={ACTIVE_AFFAIRS_COLUMNS}
+                  rows={completedAffairs}
+                  loading={loadingCompleted}
+                  rowKey="regNo"
+                  searchLabel="Search completed affairs"
+                  extraColumn={{
+                    label: "Action",
+                    render: (row) => (
+                      <button
+                        type="button"
+                        className="home-btn home-btn--ghost home-btn--sm"
+                        disabled={finalizingRegNo !== null}
+                        onClick={() => handleFinalizeAffair(row)}
+                      >
+                        {finalizingRegNo === row.regNo
+                          ? "Confirming..."
+                          : "Confirm"}
+                      </button>
+                    ),
+                  }}
+                />
+              ) : (
+                <DataPanel
+                  i={5}
+                  title="Finalized Affairs"
+                  description="Previously confirmed and finalized affairs."
+                  columns={ACTIVE_AFFAIRS_COLUMNS}
+                  rows={finalizedAffairs}
+                  loading={loadingFinalized}
+                  rowKey="regNo"
+                  searchLabel="Search finalized affairs"
+                />
+              )}
+            </Card>
           </div>
 
           {/* Right bar */}
