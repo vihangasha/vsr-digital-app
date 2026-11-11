@@ -3,7 +3,9 @@
 **A Retail Installment Management System**
 
 REIPER is a fully functional web application developed by **RocketCode**
-and **Vihanga Jayakody**. It is designed for retail stores that provide
+and **Vihanga Jayakody**. **REAPER** name stands for the term 
+**R**etailer's **E**nterprise **A**ccounts **P**latform with 
+**E**laborate **R**ecords.  It is designed for retail stores that provide
 goods to customers through easy-installment payment plans.
 
 The application helps businesses manage customer information,
