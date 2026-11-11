@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, Plus, X } from "lucide-react";
 import "../../styles/customerRegistration/registration.css";
 
 const creditTypes = [
@@ -9,8 +9,11 @@ const creditTypes = [
     { label: "Monthly Collect", prefix: "M" },
     { label: "Monthly Interest", prefix: "MINT" },
     { label: "Weekly Installment", prefix: "W" },
-    { label: "Cheque Cashing", prefix: "C" },
+    { label: "Cheque Cashing", prefix: "CH" },
 ];
+
+// Route that returns the next registration number
+const AUTO_NUMBER_URL = "/api/auto-number/get";
 
 /* ------------------------------------------------------------------
    Small pieces
@@ -55,11 +58,14 @@ function Section({ title, description, children }) {
 }
 
 // i = position inside its section, used to stagger the fields in
-function Field({ id, label, i = 0, wide = false, hint, children }) {
+function Field({ id, label, i = 0, wide = false, required = true, className = "", hint, children }) {
     return (
-        <div className={`regdebtor-field${wide ? " regdebtor-field--wide" : ""}`} style={{ "--i": i }}>
+        <div
+            className={`regdebtor-field${wide ? " regdebtor-field--wide" : ""}${className ? ` ${className}` : ""}`}
+            style={{ "--i": i }}
+        >
             <label htmlFor={id}>
-                {label} <span aria-hidden="true">*</span>
+                {label} {required && <span aria-hidden="true">*</span>}
             </label>
             {children}
             {hint && <small>{hint}</small>}
@@ -86,7 +92,12 @@ export default function RegDebtor({ onClose, onSubmit }) {
         routeToHouse: "",
     });
 
+    const [numberLoading, setNumberLoading] = useState(false);
+    const [numberError, setNumberError] = useState("");
+
     const rootRef = useRef(null);
+    const addBtnRef = useRef(null);
+    const numberRequest = useRef(0);
     useReveal(rootRef);
 
     // The form replaces the table, so start from the top of the page
@@ -100,36 +111,73 @@ export default function RegDebtor({ onClose, onSubmit }) {
         const { name, value } = e.target;
 
         if (name === "creditType") {
-            const next = creditTypes.find((t) => t.label === value)?.prefix ?? "";
-            setFormData((prev) => ({
-                ...prev,
-                creditType: value,
-                registrationNo: next ? prev.registrationNo.replace(/^[A-Z]+-?/, "") : "",
-            }));
-            return;
-        }
-
-        if (name === "registrationNo") {
-            setFormData((prev) => ({
-                ...prev,
-                registrationNo: value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase(),
-            }));
+            // A different credit type means a different number: drop the old one
+            // and ignore any request that is still in flight.
+            numberRequest.current += 1;
+            setNumberLoading(false);
+            setNumberError("");
+            setFormData((prev) => ({ ...prev, creditType: value, registrationNo: "" }));
             return;
         }
 
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Ask the API for the next registration number
+    const fetchRegistrationNo = async () => {
+        if (!prefix || formData.registrationNo || numberLoading) return;
+
+        const requestId = ++numberRequest.current;
+
+        setNumberLoading(true);
+        setNumberError("");
+
+        try {
+            const params = new URLSearchParams({ creditType: formData.creditType, prefix });
+            const response = await fetch(`${AUTO_NUMBER_URL}?${params.toString()}`, {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: { Accept: "application/json" },
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            // Credit type changed while waiting: ignore this response
+            if (requestId !== numberRequest.current) return;
+
+            if (!response.ok || !data.success || !data.registrationNo) {
+                throw new Error(data.error || "Unable to fetch the registration number.");
+            }
+
+            setFormData((prev) => ({
+                ...prev,
+                registrationNo: String(data.registrationNo).trim().toUpperCase(),
+            }));
+        } catch (error) {
+            if (requestId !== numberRequest.current) return;
+            setNumberError(error.message || "Unable to fetch the registration number.");
+        } finally {
+            if (requestId === numberRequest.current) setNumberLoading(false);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const finalData = {
-            ...formData,
-            registrationNo: prefix ? `${prefix}-${formData.registrationNo}` : formData.registrationNo,
-        };
+        // The number field is read-only, so the browser's "required" check skips it
+        if (!formData.registrationNo) {
+            setNumberError("Add a registration number before registering the customer.");
+            addBtnRef.current?.focus();
+            return;
+        }
 
-        if (onSubmit) onSubmit(finalData);
+        // The prefix is only an indicator; it is not part of the saved data
+        if (onSubmit) onSubmit({ ...formData, prefix });
     };
+
+    // idle: no credit type yet | missing: waiting for "+" | ready: number added
+    const regState = formData.registrationNo ? "ready" : prefix ? "missing" : "idle";
 
     const props = (name) => ({ id: name, name, value: formData[name], onChange: handleChange, required: true });
 
@@ -162,44 +210,88 @@ export default function RegDebtor({ onClose, onSubmit }) {
                 </header>
 
                 <form className="regdebtor-form" onSubmit={handleSubmit}>
-                    <Section title="Account" description="The credit type sets the prefix of the registration number.">
-                        <Field id="creditType" label="Credit type" i={0}>
-                            <div className="regdebtor-select">
-                                <select {...props("creditType")}>
-                                    <option value="" disabled>
-                                        Select credit type
-                                    </option>
-                                    {creditTypes.map((type) => (
-                                        <option key={type.label} value={type.label}>
-                                            {type.label}
+                    <Section title="Account" description="The credit type sets the prefix shown beside the registration number.">
+                        <div className="regdebtor-account-row">
+                            <Field id="creditType" label="Credit type" i={0}>
+                                <div className="regdebtor-select">
+                                    <select {...props("creditType")}>
+                                        <option value="" disabled>
+                                            Select credit type
                                         </option>
-                                    ))}
-                                </select>
-                                <ChevronDown size={16} className="regdebtor-select__icon" aria-hidden="true" />
-                            </div>
-                        </Field>
+                                        {creditTypes.map((type) => (
+                                            <option key={type.label} value={type.label}>
+                                                {type.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown size={16} className="regdebtor-select__icon" aria-hidden="true" />
+                                </div>
+                            </Field>
 
-                        <Field
-                            id="registrationNo"
-                            label="Registration no."
-                            i={1}
-                            hint={
-                                prefix
-                                    ? `Will be saved as ${prefix}-${formData.registrationNo || "XXXX"}`
-                                    : "Choose a credit type to set the prefix"
-                            }
-                        >
-                            <div className="regdebtor-registration">
-                                <div className="regdebtor-prefix">{prefix || "\u2014"}</div>
-                                <input
-                                    {...props("registrationNo")}
-                                    type="text"
-                                    autoComplete="off"
-                                    placeholder={prefix ? "Enter registration number" : "Select credit type first"}
-                                    disabled={!prefix}
-                                />
-                            </div>
-                        </Field>
+                            <Field id="creditPrefix" label="Prefix" i={1} required={false}>
+                                <output id="creditPrefix" className="regdebtor-prefix" aria-live="polite">
+                                    {prefix || "\u2014"}
+                                </output>
+                            </Field>
+
+                            <Field
+                                id="registrationNo"
+                                label="Registration no."
+                                i={2}
+                                className="regdebtor-field--regno"
+                                hint={
+                                    numberError
+                                        ? undefined
+                                        : regState === "ready"
+                                            ? "Registration number added."
+                                            : regState === "missing"
+                                                ? "Press + to get the registration number."
+                                                : "Choose a credit type first."
+                                }
+                            >
+                                <div className={`regdebtor-regno is-${regState}${numberLoading ? " is-loading" : ""}`}>
+                                    {regState === "ready" && (
+                                        <span className="regdebtor-regno__badge" aria-hidden="true">
+                                            <Check size={14} strokeWidth={3} />
+                                        </span>
+                                    )}
+
+                                    <input
+                                        {...props("registrationNo")}
+                                        className="regdebtor-regno__value"
+                                        type="text"
+                                        autoComplete="off"
+                                        readOnly
+                                        aria-readonly="true"
+                                        placeholder={prefix ? "Add a registration no." : "Select credit type first"}
+                                    />
+
+                                    {regState === "missing" && (
+                                        <button
+                                            type="button"
+                                            ref={addBtnRef}
+                                            className="regdebtor-regno__add"
+                                            onClick={fetchRegistrationNo}
+                                            disabled={numberLoading}
+                                            aria-label="Add the next registration number"
+                                            title="Add the next registration number"
+                                        >
+                                            {numberLoading ? (
+                                                <span className="regdebtor-regno__spinner" aria-hidden="true" />
+                                            ) : (
+                                                <Plus size={18} strokeWidth={3} />
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {numberError && (
+                                    <small className="regdebtor-field__error" role="alert">
+                                        {numberError}
+                                    </small>
+                                )}
+                            </Field>
+                        </div>
                     </Section>
 
                     <Section title="Personal details" description="Who the customer is and where to reach them.">

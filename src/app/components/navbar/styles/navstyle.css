@@ -122,12 +122,15 @@
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--nav-btn-text-hover), var(--nav-btn-hover2));
+  background: #ffffff;
   color: var(--nav-accent-text);
+  border-bottom: 6px solid #aaa9a9;
+  border-right: 3px solid #a3a3a3;
 }
 
 .nav-item.active:hover {
-  background: transparent;
+  background: #ffffff;
+  border-bottom: 6px solid #6d6d6d;
   transform: none;
 }
 
