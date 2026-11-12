@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronUp, Eye, Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ChevronUp, Eye, Plus, RefreshCw, Search } from "lucide-react";
 import Navbar from "../components/navbar/navbar";
 import RegDebtor from "../components/customerRegistration/registration";
 import CustomerProfile from "../components/customerProfile/profile";
+import ProfileEdit from "../components/customerEdit/profileEdit";
 import NewInstallment from "../components/new-Installment/new-installment";
 import "../styles/customerRegistration/registration.css";
 import "../styles/customers/customers.css";
@@ -117,6 +118,7 @@ export default function Customers() {
     const [loadingCustomers, setLoadingCustomers] = useState(true);
     const [customersError, setCustomersError] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [editingCustomer, setEditingCustomer] = useState(null);
     // The profile opens in place of the table, like the forms
     const formOpen = showRegistration || showNewInstallment || Boolean(selectedCustomer);
     const [filter, setFilter] = useState(FILTERS[0]);
@@ -398,8 +400,37 @@ export default function Customers() {
     const customerLabel = (customer) => customer?.fullName || customer?.name || "customer";
 
     const handleEditCustomer = (customer) => {
-        // TODO: open an edit form pre-filled with this customer
-        console.log("Edit customer:", customer);
+        setEditingCustomer(customer);
+    };
+
+    const handleSaveCustomer = async (updatedData) => {
+        const response = await fetch("/api/customers/put", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.error || result.message || "Failed to update customer."
+            );
+        }
+
+        // Update the currently displayed profile immediately.
+        setSelectedCustomer((previous) => ({
+            ...previous,
+            ...updatedData,
+            updatedAt: new Date().toISOString(),
+        }));
+
+        // Refresh the customer table data.
+        await loadCustomers();
+
+        setEditingCustomer(null);
     };
 
     const handleDeleteCustomer = async (customer) => {
@@ -693,24 +724,6 @@ export default function Customers() {
                                                                     >
                                                                         <Eye size={16} strokeWidth={2.1} />
                                                                     </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        className="debtors-action debtors-action--edit"
-                                                                        onClick={() => handleEditCustomer(customer)}
-                                                                        aria-label={`Edit ${customerLabel(customer)}`}
-                                                                        title="Edit"
-                                                                    >
-                                                                        <Pencil size={16} strokeWidth={2.1} />
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        className="debtors-action debtors-action--delete"
-                                                                        onClick={() => handleDeleteCustomer(customer)}
-                                                                        aria-label={`Delete ${customerLabel(customer)}`}
-                                                                        title="Delete"
-                                                                    >
-                                                                        <Trash2 size={16} strokeWidth={2.1} />
-                                                                    </button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -733,6 +746,14 @@ export default function Customers() {
                     )}
                 </div>
             </div>
+
+            {editingCustomer && (
+                <ProfileEdit
+                    customer={editingCustomer}
+                    onClose={() => setEditingCustomer(null)}
+                    onSave={handleSaveCustomer}
+                />
+            )}
 
         </main>
     );

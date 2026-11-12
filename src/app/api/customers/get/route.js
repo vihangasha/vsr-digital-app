@@ -42,41 +42,45 @@ export async function GET() {
         // Retrieve every customer document.
         const snapshot = await adminDb.collection("customers").get();
 
-        const customers = snapshot.docs.map((doc) => {
-            const data = doc.data();
+        // Exclude the placeholder/test customer document.
+        const customers = snapshot.docs
+            .filter((doc) => doc.id !== "nic")
+            .map((doc) => {
 
-            return serializeValue({
-                ...data,
+                const data = doc.data();
 
-                // The customer document ID is the NIC.
-                id: doc.id,
-                nic: data.nic || doc.id,
+                return serializeValue({
+                    ...data,
 
-                // Keep these available even for older documents.
-                fullName: data.fullName ?? "",
-                contact: data.contact ?? "",
-                permanentAddress: data.permanentAddress ?? "",
-                businessType: data.businessType ?? "",
-                businessRegNo: data.businessRegNo ?? "",
-                businessAddress: data.businessAddress ?? "",
-                loanPurpose: data.loanPurpose ?? "",
-                routeToHouse: data.routeToHouse ?? "",
+                    // The customer document ID is the NIC.
+                    id: doc.id,
+                    nic: data.nic || doc.id,
 
-                dailyRegNo: data.dailyRegNo ?? "",
-                weeklyRegNo: data.weeklyRegNo ?? "",
-                monthlyRegNo: data.monthlyRegNo ?? "",
-                MintRegNo: data.MintRegNo ?? "",
-                chqRegNo: data.chqRegNo ?? "",
+                    // Keep these available even for older documents.
+                    fullName: data.fullName ?? "",
+                    contact: data.contact ?? "",
+                    permanentAddress: data.permanentAddress ?? "",
+                    businessType: data.businessType ?? "",
+                    businessRegNo: data.businessRegNo ?? "",
+                    businessAddress: data.businessAddress ?? "",
+                    loanPurpose: data.loanPurpose ?? "",
+                    routeToHouse: data.routeToHouse ?? "",
 
-                loyalty: data.loyalty ?? "",
-                status: data.status ?? "",
+                    dailyRegNo: data.dailyRegNo ?? "",
+                    weeklyRegNo: data.weeklyRegNo ?? "",
+                    monthlyRegNo: data.monthlyRegNo ?? "",
+                    MintRegNo: data.MintRegNo ?? "",
+                    chqRegNo: data.chqRegNo ?? "",
 
-                createdAt: data.createdAt ?? null,
-                createdBy: data.createdBy ?? "",
-                updatedAt: data.updatedAt ?? null,
-                updatedBy: data.updatedBy ?? "",
+                    loyalty: data.loyalty ?? "",
+                    status: data.status ?? "",
+
+                    createdAt: data.createdAt ?? null,
+                    createdBy: data.createdBy ?? "",
+                    updatedAt: data.updatedAt ?? null,
+                    updatedBy: data.updatedBy ?? "",
+                });
             });
-        });
 
         // Alphabetical order, without requiring every document
         // to have a fullName field in Firestore.
