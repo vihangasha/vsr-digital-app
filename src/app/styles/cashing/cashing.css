@@ -1507,6 +1507,156 @@
     box-shadow: none;
 }
 
+/* ---------- CHQ registration number ----------
+   One pill-shaped field with three states:
+   is-idle    no customer matched yet (muted placeholder)
+   is-missing customer has no number: dashed outline + round "+" button
+   is-ready   number present: solid bright outline, check badge, bold number */
+
+.cashing-chq {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 46px;
+    padding: 0 5px 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    /* same radius as .cashing-input so every form item matches */
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cashing-chq__value {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #ffffff;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    cursor: default;
+    text-overflow: ellipsis;
+}
+
+.cashing-chq__value::placeholder {
+    color: rgba(255, 255, 255, 0.42);
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+/* idle: quiet, nothing to act on yet */
+.cashing-chq.is-idle {
+    border-style: solid;
+    padding-right: 14px;
+}
+
+/* missing: dashed outline invites the action */
+.cashing-chq.is-missing {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ready: the number is locked in */
+.cashing-chq.is-ready {
+    padding-left: 8px;
+    padding-right: 14px;
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    animation: cashing-chq-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cashing-chq__badge {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #00b92b;
+    color: #000000;
+}
+
+.cashing-chq__add {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 4px;
+    padding: 0;
+    border: 1px solid #000000;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cashing-chq__add:hover:not(:disabled) {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+.cashing-chq__add:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.cashing-chq__add:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.cashing-chq__add:disabled {
+    opacity: 0.7;
+    cursor: progress;
+}
+
+.cashing-chq__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    border-top-color: #000000;
+    border-radius: 50%;
+    animation: cashing-chq-spin 0.7s linear infinite;
+}
+
+@keyframes cashing-chq-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes cashing-chq-pop {
+    from {
+        transform: scale(0.97);
+        opacity: 0.6;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .cashing-chq.is-ready,
+    .cashing-chq__spinner {
+        animation: none;
+    }
+}
+
 .cashing-calc {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

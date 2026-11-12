@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "REIPER App by RoccketCode",
-  description: "Developed by RocketCode",
+  title: "Reaper App — Retailer's Enterprise Account Platform + E. Records",
+  description: "An Installment Manager Application developed by RocketCode.lk Powered by Next.js",
 };
 
 export default function RootLayout({ children }) {

@@ -292,6 +292,7 @@
 
 .custprofile-reg {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -319,7 +320,9 @@
 
 .custprofile-reg__none {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* same chip as the prefix in the registration form */
@@ -333,6 +336,193 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     overflow-wrap: anywhere;
+}
+
+/* "Not registered" rows: round + opens a Save button on its left */
+
+/* Looks like the registration number field in the form: a dashed slot with the
+   "+" at its end. Same 30px height as before, so the row does not grow. */
+.custprofile-reg__end {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-sizing: border-box;
+    min-width: 190px;
+    height: 30px;
+    padding: 0 3px 0 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.55);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.custprofile-reg:not(.is-armed) .custprofile-reg__end {
+    cursor: pointer;
+}
+
+.custprofile-reg:not(.is-armed) .custprofile-reg__end:hover {
+    border-color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* armed: the slot firms up (solid outline) while Save is open */
+.custprofile-reg.is-armed .custprofile-reg__end {
+    border-style: solid;
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+/* same round white button as the "+" in the cheque registration field */
+.custprofile-reg__add {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #000000;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease,
+        border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custprofile-reg__add:hover:not(:disabled) {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+.custprofile-reg__add:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.custprofile-reg__add:focus-visible,
+.custprofile-reg__save:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.custprofile-reg__add:disabled {
+    opacity: 0.7;
+    cursor: progress;
+}
+
+/* fetched: Save on the left, number with a green tick on the right */
+.custprofile-reg.is-armed .custprofile-reg__end {
+    padding: 0 10px 0 3px;
+}
+
+.custprofile-fetched {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    animation: custprofile-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.custprofile-fetched__tick {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #00b82e;
+    color: #000000;
+}
+
+.custprofile-fetched__no {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.custprofile-reg__save {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 22px;
+    padding: 0 12px;
+    border: 1px solid #ffffff;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #000000;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    animation: custprofile-save-in 0.2s ease both;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.custprofile-reg__save:hover:not(:disabled) {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+.custprofile-reg__save:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.custprofile-reg__save:disabled {
+    opacity: 0.8;
+    cursor: progress;
+}
+
+.custprofile-reg__spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    border-top-color: #000000;
+    border-radius: 50%;
+    animation: custprofile-spin 0.7s linear infinite;
+}
+
+.custprofile-reg__error {
+    flex: 0 0 100%;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+/* number that was just registered */
+.custprofile-code--new {
+    animation: custprofile-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes custprofile-save-in {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes custprofile-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes custprofile-pop {
+    from {
+        transform: scale(0.94);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
 }
 
 /* ---------- Responsive ---------- */
@@ -427,7 +617,17 @@
 @media (prefers-reduced-motion: reduce) {
 
     .custprofile-btn,
-    .custprofile-tag {
+    .custprofile-tag,
+    .custprofile-reg__add,
+    .custprofile-reg__end,
+    .custprofile-reg__save {
         transition: none;
+    }
+
+    .custprofile-reg__save,
+    .custprofile-code--new,
+    .custprofile-fetched,
+    .custprofile-reg__spinner {
+        animation: none;
     }
 }

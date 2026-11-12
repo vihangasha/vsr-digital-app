@@ -1,45 +1,71 @@
+
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
 
-const REGISTRATION_FIELDS = {
-    daily: "dailyRegNo",
-    weekly: "weeklyRegNo",
-    monthly: "monthlyRegNo",
-    mint: "MintRegNo",
-    chq: "chqRegNo",
+const REGISTRATION_CONFIG = {
+    D: {
+        creditType: "daily",
+        helperField: "daily",
+        customerField: "dailyRegNo",
+    },
+    M: {
+        creditType: "monthly",
+        helperField: "monthly",
+        customerField: "monthlyRegNo",
+    },
+    MINT: {
+        creditType: "mint",
+        helperField: "monthly-int",
+        customerField: "MintRegNo",
+    },
+    W: {
+        creditType: "weekly",
+        helperField: "weekly",
+        customerField: "weeklyRegNo",
+    },
+    CH: {
+        creditType: "chq",
+        helperField: "chqRegNo",
+        customerField: "chqRegNo",
+    },
 };
 
 function normalizeCreditType(value) {
     const type = String(value || "").trim().toLowerCase();
 
-    if (["daily", "daily collect", "d"].includes(type)) {
-        return "daily";
-    }
-
-    if (["weekly", "weekly installment", "w"].includes(type)) {
-        return "weekly";
-    }
-
-    if (["monthly", "monthly collect", "m"].includes(type)) {
-        return "monthly";
-    }
-
-    if (["mint", "monthly interest", "mint interest"].includes(type)) {
-        return "mint";
-    }
-
-    if (["chq", "cheque", "cheque cashing", "c"].includes(type)) {
-        return "chq";
-    }
+    if (["daily", "daily collect"].includes(type)) return "daily";
+    if (["weekly", "weekly installment"].includes(type)) return "weekly";
+    if (["monthly", "monthly collect"].includes(type)) return "monthly";
+    if (["mint", "monthly interest"].includes(type)) return "mint";
+    if (["chq", "cheque", "cheque cashing"].includes(type)) return "chq";
 
     return null;
+}
+
+function getNextRegistrationNumber(currentNumber, prefix) {
+    const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`^${escapedPrefix}-(\\d{4,})$`);
+    const match = currentNumber.match(pattern);
+
+    if (!match) {
+        throw new Error("Invalid registration number format in auto-number helper.");
+    }
+
+    const currentValue = Number(match[1]);
+
+    if (!Number.isSafeInteger(currentValue)) {
+        throw new Error("Auto-number counter has reached an invalid value.");
+    }
+
+    const nextValue = currentValue + 1;
+    return `${prefix}-${String(nextValue).padStart(match[1].length, "0")}`;
 }
 
 export async function POST(request) {
     try {
         // --------------------------------------------------
-        // Check signed-in user
+        // Authentication
         // --------------------------------------------------
 
         const currentUser = await getCurrentUser();
@@ -52,7 +78,7 @@ export async function POST(request) {
         }
 
         // --------------------------------------------------
-        // Read request
+        // Read and validate request
         // --------------------------------------------------
 
         const body = await request.json();
@@ -68,6 +94,7 @@ export async function POST(request) {
             loanPurpose,
             routeToHouse,
             creditType,
+            prefix,
             newRegNo,
             loyalty,
             status,
@@ -75,6 +102,7 @@ export async function POST(request) {
 
         const cleanNic = String(nic || "").trim();
         const cleanRegNo = String(newRegNo || "").trim().toUpperCase();
+        const cleanPrefix = String(prefix || "").trim().toUpperCase();
 
         if (!cleanNic) {
             return NextResponse.json(
@@ -99,164 +127,236 @@ export async function POST(request) {
             );
         }
 
-        const registrationField =
-            REGISTRATION_FIELDS[normalizedCreditType];
+        const config = REGISTRATION_CONFIG[cleanPrefix];
 
-        // --------------------------------------------------
-        // Customer document is identified by NIC
-        // --------------------------------------------------
+        if (!config || config.creditType !== normalizedCreditType) {
+            return NextResponse.json(
+                { error: "Registration prefix does not match the selected credit type." },
+                { status: 400 }
+            );
+        }
+
+        const registrationField = config.customerField;
+
+        const helperRef = adminDb
+            .collection("autonum-helper")
+            .doc("helperID");
 
         const customerRef = adminDb
             .collection("customers")
             .doc(cleanNic);
 
-        const customerSnapshot = await customerRef.get();
-
-        // --------------------------------------------------
-        // Check whether this registration number is already
-        // assigned to another customer.
-        // --------------------------------------------------
-
-        const duplicateSnapshot = await adminDb
+        const duplicateQuery = adminDb
             .collection("customers")
             .where(registrationField, "==", cleanRegNo)
-            .limit(1)
-            .get();
+            .limit(2);
 
-        if (!duplicateSnapshot.empty) {
-            const duplicateDoc = duplicateSnapshot.docs[0];
+        // --------------------------------------------------
+        // Atomic customer registration + counter increment
+        // --------------------------------------------------
 
-            if (duplicateDoc.id !== cleanNic) {
-                return NextResponse.json(
-                    {
-                        error: "This registration number is already assigned to another customer.",
-                    },
-                    { status: 409 }
-                );
+        const result = await adminDb.runTransaction(async (transaction) => {
+            // All reads must happen before writes.
+            const helperSnapshot = await transaction.get(helperRef);
+            const customerSnapshot = await transaction.get(customerRef);
+            const duplicateSnapshot = await transaction.get(duplicateQuery);
+
+            if (!helperSnapshot.exists) {
+                throw new Error("AUTO_NUMBER_HELPER_NOT_FOUND");
             }
-        }
 
-        // --------------------------------------------------
-        // CUSTOMER ALREADY EXISTS
-        // --------------------------------------------------
+            const helperData = helperSnapshot.data();
+            const currentHelperNumber = String(
+                helperData[config.helperField] || ""
+            ).trim().toUpperCase();
 
-        if (customerSnapshot.exists) {
-            const customerData = customerSnapshot.data();
+            // The submitted number must still be the current helper number.
+            // This prevents two users from registering with the same number.
+            if (currentHelperNumber !== cleanRegNo) {
+                throw new Error("REGISTRATION_NUMBER_CHANGED");
+            }
 
-            const existingRegistration =
-                String(customerData[registrationField] || "").trim();
+            // Check for duplicate registration numbers.
+            const duplicateDoc = duplicateSnapshot.docs.find(
+                (doc) => doc.id !== cleanNic
+            );
 
-            // Registration for this loan type already exists
-            if (
-                existingRegistration &&
-                existingRegistration !== "N/A"
-            ) {
-                return NextResponse.json(
-                    {
-                        error: "User registration already exists.",
-                        registrationNo: existingRegistration,
-                    },
-                    { status: 409 }
-                );
+            if (duplicateDoc) {
+                throw new Error("DUPLICATE_REGISTRATION_NUMBER");
             }
 
             // --------------------------------------------------
-            // Existing customer + empty registration field
-            //
-            // IMPORTANT:
-            // Ignore every other submitted field.
-            // Only add the new registration number.
+            // Existing customer
+            // Only add the missing registration number.
             // --------------------------------------------------
 
-            await customerRef.update({
-                [registrationField]: cleanRegNo,
-            });
+            if (customerSnapshot.exists) {
+                const customerData = customerSnapshot.data();
 
-            return NextResponse.json(
-                {
-                    success: true,
+                const existingRegistration = String(
+                    customerData[registrationField] || ""
+                ).trim();
+
+                if (
+                    existingRegistration &&
+                    existingRegistration !== "N/A"
+                ) {
+                    throw new Error("CUSTOMER_REGISTRATION_EXISTS");
+                }
+
+                transaction.update(customerRef, {
+                    [registrationField]: cleanRegNo,
+                });
+
+                const nextNumber = getNextRegistrationNumber(
+                    currentHelperNumber,
+                    cleanPrefix
+                );
+
+                transaction.update(helperRef, {
+                    [config.helperField]: nextNumber,
+                });
+
+                return {
                     action: "registration-added",
-                    nic: cleanNic,
                     registrationNo: cleanRegNo,
                     registrationField,
-                    message: "New registration number added successfully.",
-                },
-                { status: 200 }
+                    nextNumber,
+                };
+            }
+
+            // --------------------------------------------------
+            // New customer
+            // --------------------------------------------------
+
+            const auditValue =
+                currentUser.role === "developer"
+                    ? "system"
+                    : currentUser.role || "system";
+
+            transaction.set(customerRef, {
+                nic: cleanNic,
+
+                fullName: String(fullName || "").trim(),
+                contact: String(contact || "").trim(),
+                permanentAddress: String(permanentAddress || "").trim(),
+
+                businessType: String(businessType || "").trim(),
+                businessRegNo: String(businessRegNo || "").trim(),
+                businessAddress: String(businessAddress || "").trim(),
+
+                loanPurpose: String(loanPurpose || "").trim(),
+                routeToHouse: String(routeToHouse || "").trim(),
+
+                dailyRegNo:
+                    normalizedCreditType === "daily" ? cleanRegNo : "",
+
+                weeklyRegNo:
+                    normalizedCreditType === "weekly" ? cleanRegNo : "",
+
+                monthlyRegNo:
+                    normalizedCreditType === "monthly" ? cleanRegNo : "",
+
+                MintRegNo:
+                    normalizedCreditType === "mint" ? cleanRegNo : "",
+
+                chqRegNo:
+                    normalizedCreditType === "chq" ? cleanRegNo : "",
+
+                loyalty: String(loyalty || "").trim(),
+                status: String(status || "active").trim(),
+
+                createdAt: new Date(),
+                createdBy: auditValue,
+
+                updatedAt: "N/A",
+                updatedBy: "N/A",
+            });
+
+            const nextNumber = getNextRegistrationNumber(
+                currentHelperNumber,
+                cleanPrefix
             );
-        }
 
-        // --------------------------------------------------
-        // NEW CUSTOMER
-        // --------------------------------------------------
+            transaction.update(helperRef, {
+                [config.helperField]: nextNumber,
+            });
 
-        const auditValue =
-            currentUser.role === "developer"
-                ? "system"
-                : currentUser.role || "system";
-
-        await customerRef.set({
-            nic: cleanNic,
-
-            fullName: String(fullName || "").trim(),
-            contact: String(contact || "").trim(),
-            permanentAddress: String(permanentAddress || "").trim(),
-
-            businessType: String(businessType || "").trim(),
-            businessRegNo: String(businessRegNo || "").trim(),
-            businessAddress: String(businessAddress || "").trim(),
-
-            loanPurpose: String(loanPurpose || "").trim(),
-            routeToHouse: String(routeToHouse || "").trim(),
-
-            // Registration numbers
-            dailyRegNo:
-                normalizedCreditType === "daily"
-                    ? cleanRegNo
-                    : "",
-
-            weeklyRegNo:
-                normalizedCreditType === "weekly"
-                    ? cleanRegNo
-                    : "",
-
-            monthlyRegNo:
-                normalizedCreditType === "monthly"
-                    ? cleanRegNo
-                    : "",
-
-            MintRegNo:
-                normalizedCreditType === "mint"
-                    ? cleanRegNo
-                    : "",
-
-            chqRegNo:
-                normalizedCreditType === "chq"
-                    ? cleanRegNo
-                    : "",
-
-            loyalty: String(loyalty || "").trim(),
-            status: String(status || "active").trim(),
-
-            createdAt: new Date(),
-            createdBy: auditValue,
-
-            updatedAt: "N/A",
-            updatedBy: "N/A",
+            return {
+                action: "customer-created",
+                registrationNo: cleanRegNo,
+                registrationField,
+                nextNumber,
+            };
         });
+
+        // --------------------------------------------------
+        // Success
+        // --------------------------------------------------
 
         return NextResponse.json(
             {
                 success: true,
-                action: "customer-created",
+                action: result.action,
                 nic: cleanNic,
-                registrationNo: cleanRegNo,
-                registrationField,
-                message: "Customer registered successfully.",
+                registrationNo: result.registrationNo,
+                registrationField: result.registrationField,
+                nextNumber: result.nextNumber,
+                message:
+                    result.action === "registration-added"
+                        ? "New registration number added successfully."
+                        : "Customer registered successfully.",
             },
-            { status: 201 }
+            {
+                status: result.action === "customer-created" ? 201 : 200,
+            }
         );
     } catch (error) {
         console.error("Customer creation error:", error);
+
+        if (error.message === "AUTO_NUMBER_HELPER_NOT_FOUND") {
+            return NextResponse.json(
+                { error: "Auto-number helper document not found." },
+                { status: 500 }
+            );
+        }
+
+        if (error.message === "REGISTRATION_NUMBER_CHANGED") {
+            return NextResponse.json(
+                {
+                    error: "This registration number is no longer available. Please add the latest number and try again.",
+                },
+                { status: 409 }
+            );
+        }
+
+        if (error.message === "DUPLICATE_REGISTRATION_NUMBER") {
+            return NextResponse.json(
+                {
+                    error: "This registration number is already assigned to another customer.",
+                },
+                { status: 409 }
+            );
+        }
+
+        if (error.message === "CUSTOMER_REGISTRATION_EXISTS") {
+            return NextResponse.json(
+                {
+                    error: "User registration already exists.",
+                },
+                { status: 409 }
+            );
+        }
+
+        if (
+            error.message?.includes("Invalid registration number format") ||
+            error.message?.includes("Auto-number counter")
+        ) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: 500 }
+            );
+        }
 
         return NextResponse.json(
             { error: "Unable to register customer." },

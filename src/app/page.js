@@ -451,14 +451,11 @@ function DataPanel({ i = 0, title, description, columns, rows, loading = false, 
    Task Extender (right bar, below the calendar)
 ------------------------------------------------------------------ */
 
-const MAX_EXTEND_DAYS = 10000;
-
 function TaskExtenderCard({ onExtend }) {
-  const [days, setDays] = useState("");
   const [remarks, setRemarks] = useState("");
   const [busy, setBusy] = useState(false);
   const [charged, setCharged] = useState(false);
-  const [notice, setNotice] = useState(null); // { type: "success" | "error", text }
+  const [notice, setNotice] = useState(null);
   const chargeTimer = useRef(null);
   const noticeTimer = useRef(null);
 
@@ -473,7 +470,6 @@ function TaskExtenderCard({ onExtend }) {
   const showNotice = (type, text) => {
     clearTimeout(noticeTimer.current);
     setNotice({ type, text });
-    // The notice area is reserved, so clearing it leaves the card the same height.
     noticeTimer.current = setTimeout(() => setNotice(null), 6000);
   };
 
@@ -481,28 +477,31 @@ function TaskExtenderCard({ onExtend }) {
     e.preventDefault();
     if (busy) return;
 
-    // Charge the bolt (blue outline, cyan fill) on every press; CSS fades it back to normal.
     clearTimeout(chargeTimer.current);
     setCharged(true);
     chargeTimer.current = setTimeout(() => setCharged(false), 900);
 
-    const count = Number(days);
-    if (!Number.isInteger(count) || count < 1 || count > MAX_EXTEND_DAYS) {
-      showNotice("error", "Enter a whole number of days from 1 to 10,000.");
+    if (!remarks.trim()) {
+      showNotice("error", "Please enter a reason for extending the working day.");
       return;
     }
 
     setBusy(true);
+
     try {
-      await onExtend?.(count, remarks.trim());
+      await onExtend?.(remarks.trim());
+
       showNotice(
         "success",
-        `Business operations are successfully shifted forward by ${count} ${count === 1 ? "day" : "days"}.`
+        "Business operations are successfully shifted forward by one day."
       );
-      setDays("");
+
       setRemarks("");
     } catch (error) {
-      showNotice("error", error.message || "Could not move the working days. Try again.");
+      showNotice(
+        "error",
+        error.message || "Could not move the working day. Try again."
+      );
     } finally {
       setBusy(false);
     }
@@ -513,42 +512,10 @@ function TaskExtenderCard({ onExtend }) {
       <CardHead title="Move working days" />
 
       <form className="home-extender__form" onSubmit={handleSubmit} noValidate>
-        <label className="home-extender__label" htmlFor="extend-days">
-          Enter duration in days
-        </label>
-        <div className="home-extender__row">
-          <input
-            id="extend-days"
-            className="home-input"
-            type="text"
-            inputMode="numeric"
-            maxLength={5}
-            autoComplete="off"
-            value={days}
-            onChange={(e) => setDays(e.target.value.replace(/\D/g, "").slice(0, 5))}
-            placeholder="Days"
-          />
-          <button
-            type="submit"
-            className={`home-btn home-btn--primary home-btn--bolt${charged ? " is-charged" : ""}`}
-            disabled={busy}
-          >
-            {/* Bolt = flash.png, drawn as stacked layers so CSS can animate each one */}
-            <span className="home-btn__bolt-box" aria-hidden="true">
-              <span className="home-bolt home-bolt--outline" />
-              <span className="home-bolt home-bolt--fill" />
-              <span className="home-bolt-charge">
-                <span className="home-bolt home-bolt--charge-fill" />
-                <span className="home-bolt home-bolt--charge-line" />
-              </span>
-            </span>
-            Extend
-          </button>
-        </div>
-
         <label className="home-extender__label" htmlFor="extend-remarks">
-          Remarks
+          Reason for extension
         </label>
+
         <input
           id="extend-remarks"
           className="home-input home-input--text"
@@ -557,11 +524,28 @@ function TaskExtenderCard({ onExtend }) {
           autoComplete="off"
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
-          placeholder="Reason for moving the days"
+          placeholder="Why are working days being extended?"
         />
+
+        <div className="home-extender__row">
+          <button
+            type="submit"
+            className={`home-btn home-btn--primary home-btn--bolt${charged ? " is-charged" : ""}`}
+            disabled={busy}
+          >
+            <span className="home-btn__bolt-box" aria-hidden="true">
+              <span className="home-bolt home-bolt--outline" />
+              <span className="home-bolt home-bolt--fill" />
+              <span className="home-bolt-charge">
+                <span className="home-bolt home-bolt--charge-fill" />
+                <span className="home-bolt home-bolt--charge-line" />
+              </span>
+            </span>
+            Extend a Day
+          </button>
+        </div>
       </form>
 
-      {/* Reserved space: stays empty until a result arrives, so the card never resizes */}
       <p
         className={`home-extender__notice${notice ? ` is-${notice.type}` : ""}`}
         role="status"
@@ -951,7 +935,48 @@ export default function Home() {
   // Task Extender: shift business operations forward by `days`.
   // TODO: call your real endpoint here. Throw an Error to show it in the panel.
   // `remarks` is the optional note typed in the Remarks field.
-  const handleExtendTasks = async (days, remarks) => { };
+  const handleExtendTasks = async (remarks) => {
+    const response = await fetch("/api/business-extension/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        passedReason: remarks.trim(),
+      }),
+    });
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Invalid response from the server.");
+    }
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || "Failed to extend business operations."
+      );
+    }
+
+    if (!data.extended) {
+      throw new Error(
+        "No records have a next payment date matching today. Nothing was changed."
+      );
+    }
+
+    console.log("Business extension completed:", {
+      extensionID: data.extension?.extensionID,
+      passedDate: data.extension?.passedDate,
+      currentAffairsUpdated: data.currentAffairsUpdated,
+      installmentsUpdated: data.installmentsUpdated,
+      totalUpdated: data.totalUpdated,
+    });
+
+    return data;
+  };
 
   // Completed Affairs > Verification > Paid. TODO: call your endpoint to mark the affair as paid/verified.
   // Confirm an affair and move it into finalized-affairs.
